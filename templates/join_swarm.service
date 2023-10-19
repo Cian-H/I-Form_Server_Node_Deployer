@@ -1,0 +1,8 @@
+[Unit]
+Description=Ensure that node joins a swarm on startup
+
+[Service]
+ExecStart=/root/join_swarm.sh
+
+[Install]
+WantedBy=multi-user.target

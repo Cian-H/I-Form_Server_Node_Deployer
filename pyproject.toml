@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "i-form-server-node-deployer"
+version = "0.1.0"
+description = ""
+authors = ["Cian Hughes <cian.hughes@dcu.ie>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+typer = {extras = ["all"], version = "^0.9.0"}
+selenium = "^4.14.0"
+mechanicalsoup = "^1.3.0"
+docker = "^6.1.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
