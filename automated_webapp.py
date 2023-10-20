@@ -83,6 +83,7 @@ def json_to_img(fuel_ignition_json, img_path):
                     type="bind",
                 )
             ],
+            remove=True,
         )
         # Wait for the container to finish starting up
         while SELENIUM_INIT_MESSAGE not in selenium_container.logs().decode():
