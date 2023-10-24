@@ -1,0 +1,42 @@
+{
+  "login": {
+    "users": [
+      {
+        "name": "root",
+        "hash_type": "bcrypt"
+      }
+    ]
+  },
+  "network": {
+    "interfaces": [
+      {
+        "name": "eth0",
+        "ipv4": {
+          "network_type": "DHCP",
+          "auto_dns_enabled": true
+        },
+        "ipv6": {
+          "network_type": "DHCP",
+          "auto_dns_enabled": true
+        }
+      }
+    ]
+  },
+  "systemd": {
+    "units": [
+      {
+        "name": "cockpit.socket.service",
+        "enabled": "yes"
+      },
+      {
+        "name": "docker.service",
+        "enabled": "yes"
+      }
+    ]
+  },
+  "package": {
+    "install": [
+      "patterns-microos-cockpit, docker, jq"
+    ]
+  }
+}
