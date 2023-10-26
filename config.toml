@@ -1,0 +1,17 @@
+[default]
+ROOT_DIR = "."
+BUILD_DIR = "build"
+DOCKERFILE_DIR = "docker"
+SELENIUM_INIT_MESSAGE = "INFO [Standalone.execute] - Started Selenium Standalone"
+FUELIGNITION_INIT_MESSAGE = "ready in *ms."
+FUELIGNITION_URL = "http://localhost:3000/fuel-ignition/edit"
+FUELIGNITION_BUILD_DIR = "fuel-ignition"
+CWD_MOUNTDIR = "/host_cwd"
+CLIENT_STDOUT = true
+CLEANUP_IMAGES = false
+
+[local]
+FUELIGNITION_URL = "http://localhost:3000/fuel-ignition/edit"
+
+[remote]
+FUELIGNITION_URL = "https://opensuse.github.io/fuel-ignition/edit"

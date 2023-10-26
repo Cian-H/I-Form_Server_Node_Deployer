@@ -1,11 +1,9 @@
 from fnmatch import fnmatch
 import io
-from pathlib import Path
 import tarfile
 import time
 from typing import Annotated
 
-import docker
 import git
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -13,17 +11,19 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import typer
 
-from debug import debug_mode
-
-
-CLIENT = docker.from_env(version="auto")
-SELENIUM_INIT_MESSAGE = "INFO [Standalone.execute] - Started Selenium Standalone"
-FUELIGNITION_INIT_MESSAGE = "ready in *ms."
-FUELIGNITION_BUILD_DIR = Path("build/fuel-ignition")
-FUELIGNITION_URL = (
-    "http://localhost:3000/fuel-ignition/edit"  # "https://opensuse.github.io/fuel-ignition/edit"
+from config import (
+    CLEANUP_IMAGES,
+    CLIENT,
+    CWD_MOUNTDIR,
+    DOCKERFILE_DIR,
+    FUELIGNITION_BUILD_DIR,
+    FUELIGNITION_INIT_MESSAGE,
+    FUELIGNITION_URL,
+    ROOT_DIR,
+    SELENIUM_INIT_MESSAGE,
 )
-CWD_MOUNTDIR = Path("/host_cwd")
+from debug import debug_mode
+import docker
 
 
 def create_driver():
@@ -62,7 +62,7 @@ def convert_json_via_fuelignition(container, driver, fuelignition_json, img_path
     image_file = container.exec_run("ls /home/seluser/Downloads/").output.decode().split()[0]
     # Finally, fetch the image file from the container
     client_image_path = f"/home/seluser/Downloads/{image_file}"
-    host_image_path = Path().cwd() / img_path
+    host_image_path = ROOT_DIR / img_path
     if host_image_path.exists():
         host_image_path.unlink()
     filestream = container.get_archive(client_image_path)[0]
@@ -103,21 +103,24 @@ def build_fuelignition():
     root_container = (engine_version[0] > 9) or (engine_version[0] == 9 and engine_version[1] >= 3)
     dockerfile = "Dockerfile"
     if root_container:
-        dockerfile = "../../templates/patched.dockerfile"
-    CLIENT.images.build(
+        dockerfile = DOCKERFILE_DIR / "fuel-ignition.dockerfile"
+    image = CLIENT.images.build(
         path=str(FUELIGNITION_BUILD_DIR),
-        dockerfile=dockerfile,
+        dockerfile=str(dockerfile),
         tag="fuel-ignition",
         network_mode="host",
         buildargs={"CONTAINER_USERID": "1000"},
-        rm=True,
-        quiet=False,
+        pull=True,
+        quiet=True,
+        rm=CLEANUP_IMAGES,
     )
+    return image
 
 
 def json_to_img(fuelignition_json: str, img_path: str) -> None:
     selenium_container = None
     fuelignition_container = None
+    fuelignition_image = None
     try:
         # Initialise containers
         selenium_container = CLIENT.containers.run(
@@ -128,14 +131,14 @@ def json_to_img(fuelignition_json: str, img_path: str) -> None:
             mounts=[
                 docker.types.Mount(
                     target=str(CWD_MOUNTDIR),
-                    source=str(Path.cwd().absolute()),
+                    source=str(ROOT_DIR),
                     type="bind",
                 )
             ],
         )
-        build_fuelignition()
+        fuelignition_image = build_fuelignition()
         fuelignition_container = CLIENT.containers.run(
-            "fuel-ignition",
+            fuelignition_image,
             detach=True,
             remove=True,
             network_mode=f"container:{selenium_container.id}",
@@ -143,6 +146,8 @@ def json_to_img(fuelignition_json: str, img_path: str) -> None:
         # Wait for the containers to finish starting up
         while SELENIUM_INIT_MESSAGE not in selenium_container.logs().decode():
             time.sleep(0.1)
+            for event in CLIENT.events(decode=True):
+                print(event)
         while not fnmatch(
             fuelignition_container.logs().decode().strip().split("\n")[-1].strip(),
             FUELIGNITION_INIT_MESSAGE,
@@ -156,9 +161,15 @@ def json_to_img(fuelignition_json: str, img_path: str) -> None:
         raise e
     finally:
         if selenium_container is not None:
+            selenium_image = selenium_container.image
             selenium_container.kill()
+            if CLEANUP_IMAGES:
+                selenium_image.remove(force=True)
         if fuelignition_container is not None:
             fuelignition_container.kill()
+        if fuelignition_image is not None:
+            if CLEANUP_IMAGES:
+                fuelignition_image.remove(force=True)
 
 
 def main(

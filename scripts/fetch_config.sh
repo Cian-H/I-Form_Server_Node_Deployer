@@ -1,0 +1,1 @@
+mcopy -n -i ${CWD_MOUNTDIR}/build/ignition.img ::ignition/config.ign ${CWD_MOUNTDIR}/build/config.ign
