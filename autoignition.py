@@ -14,6 +14,7 @@ import typer
 from config import (
     CLEANUP_IMAGES,
     CLIENT,
+    CWD_MOUNT,
     CWD_MOUNTDIR,
     DOCKERFILE_DIR,
     FUELIGNITION_BUILD_DIR,
@@ -23,7 +24,6 @@ from config import (
     SELENIUM_INIT_MESSAGE,
 )
 from debug import debug_mode
-import docker
 
 
 def create_driver():
@@ -104,7 +104,7 @@ def build_fuelignition():
     dockerfile = "Dockerfile"
     if root_container:
         dockerfile = DOCKERFILE_DIR / "fuel-ignition.dockerfile"
-    image = CLIENT.images.build(
+    image, _ = CLIENT.images.build(
         path=str(FUELIGNITION_BUILD_DIR),
         dockerfile=str(dockerfile),
         tag="fuel-ignition",
@@ -128,13 +128,7 @@ def json_to_img(fuelignition_json: str, img_path: str) -> None:
             detach=True,
             remove=True,
             ports={4444: 4444, 7900: 7900},
-            mounts=[
-                docker.types.Mount(
-                    target=str(CWD_MOUNTDIR),
-                    source=str(ROOT_DIR),
-                    type="bind",
-                )
-            ],
+            mounts=[CWD_MOUNT,],
         )
         fuelignition_image = build_fuelignition()
         fuelignition_container = CLIENT.containers.run(

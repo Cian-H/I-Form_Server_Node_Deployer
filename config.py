@@ -18,8 +18,13 @@ def apply_config(config: dict) -> None:
     config["ROOT_DIR"] = Path(config["ROOT_DIR"]).absolute()
     config["BUILD_DIR"] = Path(config["BUILD_DIR"]).absolute()
     config["DOCKERFILE_DIR"] = Path(config["DOCKERFILE_DIR"]).absolute()
-    config["CWD_MOUNTDIR"] = Path(config["CWD_MOUNTDIR"])
     config["FUELIGNITION_BUILD_DIR"] = config["BUILD_DIR"] / config["FUELIGNITION_BUILD_DIR"]
+    config["CWD_MOUNTDIR"] = Path(config["CWD_MOUNTDIR"])
+    config["CWD_MOUNT"] = docker.types.Mount(
+        target=str(config["CWD_MOUNTDIR"]),
+        source=str(config["ROOT_DIR"]),
+        type="bind",
+    )
     globals().update(config)
     
 
