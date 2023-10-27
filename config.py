@@ -1,9 +1,7 @@
-import asyncio
 from pathlib import Path
 
 import tomllib
 
-from client_stdout import stdout_pipe
 import docker
 
 
@@ -22,8 +20,6 @@ def apply_config(config: dict) -> None:
     config["DOCKERFILE_DIR"] = Path(config["DOCKERFILE_DIR"]).absolute()
     config["CWD_MOUNTDIR"] = Path(config["CWD_MOUNTDIR"])
     config["FUELIGNITION_BUILD_DIR"] = config["BUILD_DIR"] / config["FUELIGNITION_BUILD_DIR"]
-    if config["CLIENT_STDOUT"]:
-        asyncio.run(stdout_pipe(config["CLIENT"]))
     globals().update(config)
     
 
