@@ -90,6 +90,7 @@ def create_img(
         str, typer.Option(help="Swarm token for connecting to the swarm", prompt=True)
     ],
 ) -> None:
+    """Creates an ignition image for deploying a new node to the swarm"""    
     switch_ip_address = ipaddress.ip_address(switch_ip_address)
     if switch_port > MAX_PORT:
         raise ValueError(f"Port must be less than {MAX_PORT}")

@@ -85,6 +85,7 @@ def create_ignition_disk(
         str, typer.Option(help="Swarm token for connecting to the swarm", prompt=True)
     ],
 ) -> None:
+    """Writes an ignition image to the specified disk for easy deployment of new nodes to the swarm""" # noqa
     create_img(hostname, password, switch_ip_address, switch_port, swarm_token)
     valid, response = validate()
     if not valid:

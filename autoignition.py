@@ -121,6 +121,7 @@ def json_to_img(
         str, typer.Option(help="The file to output the disk image to", prompt=True)
     ],
 ) -> None:
+    """Takes a fuel-ignition json file and produces an ignition disk image file"""
     selenium_container = None
     fuelignition_container = None
     fuelignition_image = None
