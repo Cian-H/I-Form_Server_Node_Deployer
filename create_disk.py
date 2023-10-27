@@ -3,11 +3,12 @@ from typing import Annotated
 
 import typer
 
+from cli import cli_spinner
 import config
 from create_img import create_img
 from debug import debug_guard
-from utils import ensure_build_dir
 from docker.types import Mount
+from utils import ensure_build_dir
 
 
 def filter_validation_response(response: str) -> str:
@@ -44,12 +45,14 @@ def validation_result() -> str:
     return response
 
 
+@cli_spinner(description="Validating ignition image", total=None)
 def validate() -> (bool, str):
     response = validation_result().decode()
     response = filter_validation_response(response)
     return (not bool(response), response)
 
 
+@cli_spinner(description="Writing ignition image to disk", total=None)
 def write_disk(disk: str) -> None:
     config.CLIENT.containers.run(
         "alpine",
@@ -60,6 +63,7 @@ def write_disk(disk: str) -> None:
 
 
 @debug_guard
+@cli_spinner(description="Creating ignition initialisation disk", total=None)
 @ensure_build_dir
 def create_ignition_disk(
     disk: Annotated[str, typer.Option(help="Path to the disk to write to", prompt=True)],
@@ -92,4 +96,5 @@ def create_ignition_disk(
 
 
 if __name__ == "__main__":
+    config.update_config("cli")
     typer.run(create_ignition_disk)

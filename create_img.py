@@ -5,6 +5,8 @@ from typing import Annotated
 import typer
 
 from autoignition import json_to_img
+from cli import cli_spinner
+import config
 from debug import debug_guard
 from utils import ensure_build_dir
 
@@ -67,6 +69,7 @@ def apply_ignition_settings(
 
 
 @debug_guard
+@cli_spinner(description="Creating ignition image", total=None)
 @ensure_build_dir
 def create_img(
     hostname: Annotated[str, typer.Option(help="Hostname for the new node", prompt=True)],
@@ -118,4 +121,5 @@ def create_img(
 
 
 if __name__ == "__main__":
+    config.update_config("cli")
     typer.run(create_img)

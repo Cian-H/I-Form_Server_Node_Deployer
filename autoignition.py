@@ -11,6 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import typer
 
+from cli import cli_spinner
 import config
 from debug import debug_guard
 from utils import ensure_build_dir
@@ -110,6 +111,7 @@ def build_fuelignition():
 
 
 @debug_guard
+@cli_spinner(description="Converting json to img", total=None)
 @ensure_build_dir
 def json_to_img(
     fuelignition_json: Annotated[
@@ -170,4 +172,5 @@ def json_to_img(
 
 
 if __name__ == "__main__":
+    config.update_config("cli")
     typer.run(json_to_img)
