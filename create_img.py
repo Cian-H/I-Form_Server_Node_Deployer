@@ -5,7 +5,8 @@ from typing import Annotated
 import typer
 
 from autoignition import json_to_img
-from debug import debug_mode
+from debug import debug_guard
+from utils import ensure_build_dir
 
 
 MAX_PORT: int = 65535
@@ -65,8 +66,26 @@ def apply_ignition_settings(
     return ignition_config
 
 
+@debug_guard
+@ensure_build_dir
 def create_img(
-    hostname: str, password: str, switch_ip_address: str, switch_port: str, swarm_token: str
+    hostname: Annotated[str, typer.Option(help="Hostname for the new node", prompt=True)],
+    password: Annotated[
+        str,
+        typer.Option(
+            help="Password for the root user on the new node",
+            prompt=True,
+            confirmation_prompt=True,
+            hide_input=True,
+        ),
+    ],
+    switch_ip_address: Annotated[
+        str, typer.Option(help="IP address of the switch to connect to", prompt=True)
+    ],
+    switch_port: Annotated[int, typer.Option(help="Port on the switch to connect to", prompt=True)],
+    swarm_token: Annotated[
+        str, typer.Option(help="Swarm token for connecting to the swarm", prompt=True)
+    ],
 ) -> None:
     switch_ip_address = ipaddress.ip_address(switch_ip_address)
     if switch_port > MAX_PORT:
@@ -98,32 +117,5 @@ def create_img(
     json_to_img("build/fuelignition.json", "build/ignition.img")
 
 
-def main(
-    hostname: Annotated[str, typer.Option(help="Hostname for the new node", prompt=True)],
-    password: Annotated[
-        str,
-        typer.Option(
-            help="Password for the root user on the new node",
-            prompt=True,
-            confirmation_prompt=True,
-            hide_input=True,
-        ),
-    ],
-    switch_ip_address: Annotated[
-        str, typer.Option(help="IP address of the switch to connect to", prompt=True)
-    ],
-    switch_port: Annotated[int, typer.Option(help="Port on the switch to connect to", prompt=True)],
-    swarm_token: Annotated[
-        str, typer.Option(help="Swarm token for connecting to the swarm", prompt=True)
-    ],
-    debug: Annotated[bool, typer.Option(help="Enable debug mode")] = False,
-) -> None:
-    debug_mode(debug)
-    f = create_img
-    if debug:
-        f = ss(f)  # noqa: F821, # type: ignore #? ss is installed in debug_mode
-    f(hostname, password, switch_ip_address, switch_port, swarm_token)
-
-
 if __name__ == "__main__":
-    typer.run(main)
+    typer.run(create_img)

@@ -1,10 +1,15 @@
-import typer  # type: ignore
+from functools import wraps
 import inspect
+from typing import Callable
+
+import typer  # type: ignore
+
+import config
 
 
-def debug_mode(debug: bool = False):
-    if not debug:
-        return
+def debug_guard(f: Callable) -> Callable:
+    if not config.DEBUG:
+        return f
     try:
         import snoop  # type: ignore
     except ImportError:
@@ -14,4 +19,6 @@ def debug_mode(debug: bool = False):
         snoop.install(
             snoop="ss",
         )
+    
     typer.echo(f"Debug mode enabled: {inspect.stack()[1].filename}")
+    wraps(f)(ss)(f)  # noqa: F821 #* ss is installed in debug_mode

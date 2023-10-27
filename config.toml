@@ -9,9 +9,17 @@ FUELIGNITION_BUILD_DIR = "fuel-ignition"
 CWD_MOUNTDIR = "/host_cwd"
 CLIENT_STDOUT = true
 CLEANUP_IMAGES = false
+CLI = false
+DEBUG = false
 
 [local]
 FUELIGNITION_URL = "http://localhost:3000/fuel-ignition/edit"
 
 [remote]
 FUELIGNITION_URL = "https://opensuse.github.io/fuel-ignition/edit"
+
+[cli]
+CLI = true
+
+[debug]
+DEBUG = true

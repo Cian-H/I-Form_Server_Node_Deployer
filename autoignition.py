@@ -11,19 +11,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import typer
 
-from config import (
-    CLEANUP_IMAGES,
-    CLIENT,
-    CWD_MOUNT,
-    CWD_MOUNTDIR,
-    DOCKERFILE_DIR,
-    FUELIGNITION_BUILD_DIR,
-    FUELIGNITION_INIT_MESSAGE,
-    FUELIGNITION_URL,
-    ROOT_DIR,
-    SELENIUM_INIT_MESSAGE,
-)
-from debug import debug_mode
+import config
+from debug import debug_guard
+from utils import ensure_build_dir
 
 
 def create_driver():
@@ -36,10 +26,10 @@ def create_driver():
 
 
 def convert_json_via_fuelignition(container, driver, fuelignition_json, img_path):
-    driver.get(FUELIGNITION_URL)
+    driver.get(config.FUELIGNITION_URL)
     # Navigate to "Load Settings from" and upload the json
     load_from = driver.find_element(By.NAME, "load_from")
-    load_from.send_keys(str(CWD_MOUNTDIR / fuelignition_json))
+    load_from.send_keys(str(config.CWD_MOUNTDIR / fuelignition_json))
     # Walk through page structure to find, scroll to and click "Convert and Download"
     export = driver.find_element(By.ID, "export")
     export_divs = export.find_elements(By.TAG_NAME, "div")
@@ -62,7 +52,7 @@ def convert_json_via_fuelignition(container, driver, fuelignition_json, img_path
     image_file = container.exec_run("ls /home/seluser/Downloads/").output.decode().split()[0]
     # Finally, fetch the image file from the container
     client_image_path = f"/home/seluser/Downloads/{image_file}"
-    host_image_path = ROOT_DIR / img_path
+    host_image_path = config.ROOT_DIR / img_path
     if host_image_path.exists():
         host_image_path.unlink()
     filestream = container.get_archive(client_image_path)[0]
@@ -76,14 +66,16 @@ def convert_json_via_fuelignition(container, driver, fuelignition_json, img_path
 
 def build_fuelignition():
     # Make sure the local fuel-ignition repo is up to date
-    if (not FUELIGNITION_BUILD_DIR.exists()) or (len(tuple(FUELIGNITION_BUILD_DIR.iterdir())) == 0):
+    if (not config.FUELIGNITION_BUILD_DIR.exists()) or (
+        len(tuple(config.FUELIGNITION_BUILD_DIR.iterdir())) == 0
+    ):
         repo = git.Repo.clone_from(
             "https://github.com/openSUSE/fuel-ignition.git",
-            FUELIGNITION_BUILD_DIR,
+            config.FUELIGNITION_BUILD_DIR,
             branch="main",
         )
     else:
-        repo = git.Repo(FUELIGNITION_BUILD_DIR)
+        repo = git.Repo(config.FUELIGNITION_BUILD_DIR)
     repo.remotes.origin.update()
     repo.remotes.origin.pull()
     # Then, build the docker image using the Dockerfile in the repo
@@ -95,56 +87,67 @@ def build_fuelignition():
     engine_version = tuple(
         map(
             int,
-            next(filter(lambda x: x.get("Name") == "Engine", CLIENT.version()["Components"]))[
-                "Version"
-            ].split("."),
+            next(
+                filter(lambda x: x.get("Name") == "Engine", config.CLIENT.version()["Components"])
+            )["Version"].split("."),
         )
     )
     root_container = (engine_version[0] > 9) or (engine_version[0] == 9 and engine_version[1] >= 3)
     dockerfile = "Dockerfile"
     if root_container:
-        dockerfile = DOCKERFILE_DIR / "fuel-ignition.dockerfile"
-    image, _ = CLIENT.images.build(
-        path=str(FUELIGNITION_BUILD_DIR),
+        dockerfile = config.DOCKERFILE_DIR / "fuel-ignition.dockerfile"
+    image, _ = config.CLIENT.images.build(
+        path=str(config.FUELIGNITION_BUILD_DIR),
         dockerfile=str(dockerfile),
         tag="fuel-ignition",
         network_mode="host",
         buildargs={"CONTAINER_USERID": "1000"},
         pull=True,
         quiet=True,
-        rm=CLEANUP_IMAGES,
+        rm=config.CLEANUP_IMAGES,
     )
     return image
 
 
-def json_to_img(fuelignition_json: str, img_path: str) -> None:
+@debug_guard
+@ensure_build_dir
+def json_to_img(
+    fuelignition_json: Annotated[
+        str, typer.Option(help="The fuel-ignition json for configuring the disk image", prompt=True)
+    ],
+    img_path: Annotated[
+        str, typer.Option(help="The file to output the disk image to", prompt=True)
+    ],
+) -> None:
     selenium_container = None
     fuelignition_container = None
     fuelignition_image = None
     try:
         # Initialise containers
-        selenium_container = CLIENT.containers.run(
+        selenium_container = config.CLIENT.containers.run(
             "selenium/standalone-firefox:latest",
             detach=True,
             remove=True,
             ports={4444: 4444, 7900: 7900},
-            mounts=[CWD_MOUNT,],
+            mounts=[
+                config.CWD_MOUNT,
+            ],
         )
         fuelignition_image = build_fuelignition()
-        fuelignition_container = CLIENT.containers.run(
+        fuelignition_container = config.CLIENT.containers.run(
             fuelignition_image,
             detach=True,
             remove=True,
             network_mode=f"container:{selenium_container.id}",
         )
         # Wait for the containers to finish starting up
-        while SELENIUM_INIT_MESSAGE not in selenium_container.logs().decode():
+        while config.SELENIUM_INIT_MESSAGE not in selenium_container.logs().decode():
             time.sleep(0.1)
-            for event in CLIENT.events(decode=True):
+            for event in config.CLIENT.events(decode=True):
                 print(event)
         while not fnmatch(
             fuelignition_container.logs().decode().strip().split("\n")[-1].strip(),
-            FUELIGNITION_INIT_MESSAGE,
+            config.FUELIGNITION_INIT_MESSAGE,
         ):
             time.sleep(0.1)
         # Now, create the webdriver and convert the json to an img
@@ -157,30 +160,14 @@ def json_to_img(fuelignition_json: str, img_path: str) -> None:
         if selenium_container is not None:
             selenium_image = selenium_container.image
             selenium_container.kill()
-            if CLEANUP_IMAGES:
+            if config.CLEANUP_IMAGES:
                 selenium_image.remove(force=True)
         if fuelignition_container is not None:
             fuelignition_container.kill()
         if fuelignition_image is not None:
-            if CLEANUP_IMAGES:
+            if config.CLEANUP_IMAGES:
                 fuelignition_image.remove(force=True)
 
 
-def main(
-    fuelignition_json: Annotated[
-        str, typer.Option(help="The fuel-ignition json for configuring the disk image", prompt=True)
-    ],
-    img_path: Annotated[
-        str, typer.Option(help="The file to output the disk image to", prompt=True)
-    ],
-    debug: Annotated[bool, typer.Option(help="Enable debug mode")] = False,
-) -> None:
-    debug_mode(debug)
-    f = json_to_img
-    if debug:
-        f = ss(f)  # noqa: F821, # type: ignore #? ss is installed in debug_mode
-    f(fuelignition_json, img_path)
-
-
 if __name__ == "__main__":
-    typer.run(main)
+    typer.run(json_to_img)
