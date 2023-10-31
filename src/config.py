@@ -11,6 +11,7 @@ import docker
 
 
 CLIENT = docker.from_env(version="auto")
+ROOT = Path(__file__).parent.parent
 
 type ConfigLabel = str | list[str]
 
@@ -18,7 +19,7 @@ type ConfigLabel = str | list[str]
 def get_config(config_label: ConfigLabel = ["default"]) -> dict:
     if isinstance(config_label, str):
         config_label = [config_label]
-    with open("config.toml", "rb") as f:
+    with open(ROOT / "config.toml", "rb") as f:
         configs: dict = tomllib.load(f)
     out_config: dict = {}
     for c in config_label:
