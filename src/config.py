@@ -5,13 +5,12 @@
 
 from pathlib import Path
 
-import tomllib
-
 import docker
+import tomllib
 
 
 CLIENT = docker.from_env(version="auto")
-ROOT = Path(__file__).parent.parent
+ROOT = Path(__file__).parent.parent.absolute()
 
 type ConfigLabel = str | list[str]
 
