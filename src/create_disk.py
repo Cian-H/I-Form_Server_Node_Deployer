@@ -66,9 +66,9 @@ def write_disk(disk: str) -> None:
 @cli_spinner(description="Creating ignition initialisation disk", total=None)
 @ensure_build_dir
 def create_ignition_disk(
-    disk: Annotated[str, typer.Option(help="Path to the disk to write to", prompt=True)],
-    hostname: Annotated[str, typer.Option(help="Hostname for the new node", prompt=True)],
-    password: Annotated[
+    disk: str = Annotated[str, typer.Option(help="Path to the disk to write to", prompt=True)],
+    hostname: str = Annotated[str, typer.Option(help="Hostname for the new node", prompt=True)],
+    password: str = Annotated[
         str,
         typer.Option(
             help="Password for the root user on the new node",
@@ -77,16 +77,25 @@ def create_ignition_disk(
             hide_input=True,
         ),
     ],
-    switch_ip_address: Annotated[
+    switch_ip_address: str = Annotated[
         str, typer.Option(help="IP address of the switch to connect to", prompt=True)
     ],
-    switch_port: Annotated[int, typer.Option(help="Port on the switch to connect to", prompt=True)],
-    swarm_token: Annotated[
+    switch_port: int = Annotated[
+        int, typer.Option(help="Port on the switch to connect to", prompt=True)
+    ],
+    swarm_token: str = Annotated[
         str, typer.Option(help="Swarm token for connecting to the swarm", prompt=True)
     ],
 ) -> None:
-    """Writes an ignition image to the specified disk for easy deployment of new nodes to the swarm""" # noqa
-    create_img(hostname, password, switch_ip_address, switch_port, swarm_token)
+    """Writes an ignition image to the specified disk for easy deployment of new nodes to the swarm"""  # noqa
+    create_img(
+        hostname,
+        password,
+        switch_ip_address,
+        switch_port,
+        swarm_token,
+        config.BUILD_DIR / "ignition.img",
+    )
     valid, response = validate()
     if not valid:
         print(response)

@@ -1,13 +1,13 @@
 import ipaddress
 import json
+from pathlib import Path
 from typing import Annotated
-
-import typer
 
 from autoignition import json_to_img
 from cli import cli_spinner
 import config
 from debug import debug_guard
+import typer
 from utils import ensure_build_dir
 
 
@@ -15,7 +15,7 @@ MAX_PORT: int = 65535
 
 
 def load_template() -> dict:
-    with open("templates/fuelignition.json", "r") as f:
+    with open(config.SRC_DIR / "templates" / "fuelignition.json", "r") as f:
         out = json.load(f)
     return out
 
@@ -31,8 +31,8 @@ def apply_ignition_settings(
     ignition_config["login"]["users"][0]["passwd"] = password
 
     # Add files that will define a service to ensure that the node joins the swarm
-    with open("templates/join_swarm.sh", "r") as f1, open(
-        "templates/join_swarm.service", "r"
+    with open(config.SRC_DIR / "templates" / "join_swarm.sh", "r") as f1, open(
+        config.SRC_DIR / "templates" / "join_swarm.service", "r"
     ) as f2:
         swarm_script, swarm_service = f1.read(), f2.read()
 
@@ -72,8 +72,8 @@ def apply_ignition_settings(
 @cli_spinner(description="Creating ignition image", total=None)
 @ensure_build_dir
 def create_img(
-    hostname: Annotated[str, typer.Option(help="Hostname for the new node", prompt=True)],
-    password: Annotated[
+    hostname: str = Annotated[str, typer.Option(help="Hostname for the new node", prompt=True)],
+    password: str = Annotated[
         str,
         typer.Option(
             help="Password for the root user on the new node",
@@ -82,15 +82,29 @@ def create_img(
             hide_input=True,
         ),
     ],
-    switch_ip_address: Annotated[
+    switch_ip_address: str = Annotated[
         str, typer.Option(help="IP address of the switch to connect to", prompt=True)
     ],
-    switch_port: Annotated[int, typer.Option(help="Port on the switch to connect to", prompt=True)],
-    swarm_token: Annotated[
+    switch_port: int = Annotated[
+        int, typer.Option(
+            help="Port on the switch to connect to",
+            prompt=True,
+            min=1,
+            max=MAX_PORT,
+        )
+    ],
+    swarm_token: str = Annotated[
         str, typer.Option(help="Swarm token for connecting to the swarm", prompt=True)
     ],
+    img_path: Path = Annotated[
+        Path,
+        typer.Option(
+            help="Path to the JSON file to be converted to an img",
+            default=Path.cwd() / "ignition.img",
+        ),
+    ],
 ) -> None:
-    """Creates an ignition image for deploying a new node to the swarm"""    
+    """Creates an ignition image for deploying a new node to the swarm"""
     switch_ip_address = ipaddress.ip_address(switch_ip_address)
     if switch_port > MAX_PORT:
         raise ValueError(f"Port must be less than {MAX_PORT}")
@@ -114,11 +128,11 @@ def create_img(
     )
 
     # export ignition configuration
-    with open("build/fuelignition.json", "w") as f:
+    with open(config.BUILD_DIR / "fuelignition.json", "w") as f:
         json.dump(ignition_config, f, indent=4)
 
     # convert ignition configuration to image
-    json_to_img("build/fuelignition.json", "build/ignition.img")
+    json_to_img(config.BUILD_DIR / "fuelignition.json", img_path)
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ import tomllib
 
 
 CLIENT = docker.from_env(version="auto")
-ROOT = Path(__file__).parent.parent.absolute()
+PROJECT_ROOT = Path(__file__).parent.parent.absolute()
 
 type ConfigLabel = str | list[str]
 
@@ -18,7 +18,7 @@ type ConfigLabel = str | list[str]
 def get_config(config_label: ConfigLabel = ["default"]) -> dict:
     if isinstance(config_label, str):
         config_label = [config_label]
-    with open(ROOT / "config.toml", "rb") as f:
+    with open(PROJECT_ROOT / "config.toml", "rb") as f:
         configs: dict = tomllib.load(f)
     out_config: dict = {}
     for c in config_label:
@@ -30,22 +30,26 @@ def finalise_config(config: dict) -> None:
     # First, convert base paths to Path objects
     for k, v in config.items():
         match k:
-            case "ROOT_DIR" | "BUILD_DIR" | "DOCKERFILE_DIR":
+            case "SRC_DIR" | "BUILD_DIR":
                 config[k] = Path(v).absolute()
             case "CWD_MOUNTDIR":
                 config[k] = Path(v)
     # Then, get required paths from config or globals if not present
     build_dir = config.get("BUILD_DIR", BUILD_DIR)
     cwd_mountdir = config.get("CWD_MOUNTDIR", CWD_MOUNTDIR)
-    root_dir = config.get("ROOT_DIR", ROOT_DIR)
+    src_dir = config.get("SRC_DIR", SRC_DIR)
     # Finally, construct the secondary parameters
     config["FUELIGNITION_BUILD_DIR"] = build_dir / config.get(
         "FUELIGNITION_BUILD_DIR",
         FUELIGNITION_BUILD_DIR
     )
+    config["DOCKERFILE_DIR"] = src_dir / config.get(
+        "DOCKERFILE_DIR",
+        DOCKERFILE_DIR
+    )
     config["CWD_MOUNT"] = docker.types.Mount(
         target=str(cwd_mountdir),
-        source=str(root_dir),
+        source=str(PROJECT_ROOT),
         type="bind",
     )
 

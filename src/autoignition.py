@@ -1,19 +1,19 @@
 from fnmatch import fnmatch
 import io
+from pathlib import Path
 import tarfile
 import time
 from typing import Annotated
 
+from cli import cli_spinner
+import config
+from debug import debug_guard
 import git
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import typer
-
-from cli import cli_spinner
-import config
-from debug import debug_guard
 from utils import ensure_build_dir
 
 
@@ -53,7 +53,7 @@ def convert_json_via_fuelignition(container, driver, fuelignition_json, img_path
     image_file = container.exec_run("ls /home/seluser/Downloads/").output.decode().split()[0]
     # Finally, fetch the image file from the container
     client_image_path = f"/home/seluser/Downloads/{image_file}"
-    host_image_path = config.ROOT_DIR / img_path
+    host_image_path = config.SRC_DIR / img_path
     if host_image_path.exists():
         host_image_path.unlink()
     filestream = container.get_archive(client_image_path)[0]
@@ -114,11 +114,13 @@ def build_fuelignition():
 @cli_spinner(description="Converting json to img", total=None)
 @ensure_build_dir
 def json_to_img(
-    fuelignition_json: Annotated[
-        str, typer.Option(help="The fuel-ignition json for configuring the disk image", prompt=True)
+    json_path: Path = Annotated[
+        Path,
+        typer.Option(help="The fuel-ignition json for configuring the disk image", prompt=True),
     ],
-    img_path: Annotated[
-        str, typer.Option(help="The file to output the disk image to", prompt=True)
+    img_path: Path = Annotated[
+        Path,
+        typer.Option(help="The file to output the disk image to", prompt=True),
     ],
 ) -> None:
     """Takes a fuel-ignition json file and produces an ignition disk image file"""
@@ -155,7 +157,7 @@ def json_to_img(
             time.sleep(0.1)
         # Now, create the webdriver and convert the json to an img
         driver = create_driver()
-        convert_json_via_fuelignition(selenium_container, driver, fuelignition_json, img_path)
+        convert_json_via_fuelignition(selenium_container, driver, json_path, img_path)
         driver.quit()
     except Exception as e:
         raise e

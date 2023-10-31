@@ -19,6 +19,6 @@ def debug_guard(f: Callable) -> Callable:
         snoop.install(
             snoop="ss",
         )
-    
+
     typer.echo(f"Debug mode enabled: {inspect.stack()[1].filename}")
     wraps(f)(ss)(f)  # noqa: F821 #* ss is installed in debug_mode
