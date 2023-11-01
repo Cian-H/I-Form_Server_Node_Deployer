@@ -329,6 +329,21 @@ websocket-client = ">=0.32.0"
 ssh = ["paramiko (>=2.4.3)"]
 
 [[package]]
+name = "docker-stubs"
+version = "0.1.0"
+description = "Stubs package for the Python Docker API."
+optional = false
+python-versions = "^3.8"
+files = []
+develop = false
+
+[package.source]
+type = "git"
+url = "https://github.com/rdozier-work/docker-stubs"
+reference = "HEAD"
+resolved_reference = "9de7906804ae912f1d644c97b617ac77e784fca8"
+
+[[package]]
 name = "executing"
 version = "2.0.1"
 description = "Get the currently executing AST node of a frame, and other information"
@@ -1092,4 +1107,4 @@ h11 = ">=0.9.0,<1"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "c74d1dcf762e5266d41c81b62bef444f065124fede9b3a34176cd9a6b93d9c2b"
+content-hash = "0da96ff6654ff4c33b776829e34f78ba2725a0de30980ec5eaab86a8b7abbead"

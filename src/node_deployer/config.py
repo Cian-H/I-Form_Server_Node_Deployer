@@ -1,5 +1,6 @@
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Union
 
 import docker
 import tomllib
@@ -9,7 +10,7 @@ CLIENT = docker.from_env(version="auto")
 MAX_PORT: int = 65535
 PROJECT_ROOT: Path = Path(__file__).parent.parent.parent.absolute()
 
-type ConfigLabel = str | list[str]
+ConfigLabel = Union[str, list[str]] # After PEP695 support: type ConfigLabel = str | list[str]
 
 
 class Config(SimpleNamespace):

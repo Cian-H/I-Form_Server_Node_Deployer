@@ -1,19 +1,20 @@
 from fnmatch import fnmatch
 import ipaddress
-from typing import Annotated
+from typing import Annotated, Optional, Union
 
 from docker.types import Mount
 import typer
-from typing import Tuple
 
-from .config import config
 from .cli import cli_spinner
+from .config import config
 from .create_img import create_img
 from .debug import debug_guard
 from .utils import ensure_build_dir
 
 
-type IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
+# When PEP695 is supported this line should be:
+# type IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
+IPAddress = Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
 
 
 def filter_validation_response(response: str) -> str:
@@ -60,18 +61,18 @@ def validation_result() -> str:
     )
     if config.CLEANUP_IMAGES:
         image.remove(force=True)
-    return response
+    return response.decode()
 
 
 @cli_spinner(description="Validating ignition image", total=None)
-def validate() -> Tuple[bool, str]:
+def validate() -> tuple[bool, str]:
     """Validates the ignition image
 
     Returns:
-        Tuple[bool, str]: A tuple containing a boolean indicating whether
+        tuple[bool, str]: A tuple containing a boolean indicating whether
         the validation was successful and the response from the validation
     """
-    response = validation_result().decode()
+    response = validation_result()
     response = filter_validation_response(response)
     return (not bool(response), response)
 
@@ -96,7 +97,7 @@ def write_disk(disk: str) -> None:
 @ensure_build_dir
 def create_ignition_disk(
     disk: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             "--disk",
             "-d",
@@ -114,7 +115,7 @@ def create_ignition_disk(
         ),
     ] = "node",
     password: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             "--password",
             "-p",
@@ -125,7 +126,7 @@ def create_ignition_disk(
         ),
     ] = None,
     switch_ip: Annotated[
-        IPAddress,
+        Optional[IPAddress],
         typer.Option(
             "--switch-ip",
             "-ip",
@@ -146,7 +147,7 @@ def create_ignition_disk(
         ),
     ] = 4789,
     swarm_token: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             "--swarm-token",
             "-t",
@@ -194,6 +195,10 @@ def create_ignition_disk(
     Raises:
         typer.Exit: Exit CLI if the ignition image is invalid
     """
+    # Guard against the user specifying no disk
+    if disk is None:
+        raise typer.BadParameter("No disk specified")
+    
     create_img(
         hostname = hostname,
         password = password,

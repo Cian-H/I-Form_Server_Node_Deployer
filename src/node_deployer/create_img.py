@@ -1,18 +1,19 @@
 import ipaddress
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional, Union
 
 import typer
 
-from .config import config
 from .autoignition import json_to_img
 from .cli import cli_spinner
+from .config import config
 from .debug import debug_guard
 from .utils import ensure_build_dir
 
-
-type IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
+# When PEP695 is supported this line should be:
+# type IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
+IPAddress = Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
 
 
 def load_template() -> dict:
@@ -99,7 +100,7 @@ def create_img(
         ),
     ] = "node",
     password: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             "--password",
             "-p",
@@ -110,7 +111,7 @@ def create_img(
         ),
     ] = None,
     switch_ip: Annotated[
-        IPAddress,
+        Optional[IPAddress],
         typer.Option(
             "--switch-ip",
             "-ip",
@@ -131,7 +132,7 @@ def create_img(
         ),
     ] = 4789,
     swarm_token: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             "--swarm-token",
             "-t",
@@ -194,10 +195,13 @@ def create_img(
         }
     )
 
+    # Guards against the user not specifying a password
+    if password is None:
+        raise typer.BadParameter("Password must be specified")
+
     # Create ignition configuration
-    ignition_config = load_template()
     ignition_config = apply_ignition_settings(
-        ignition_config,
+        load_template(),
         hostname,
         password,
         swarm_config,

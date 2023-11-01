@@ -81,8 +81,11 @@ def convert_json_via_fuelignition(
     bytestream = io.BytesIO(b"".join(chunk for chunk in filestream))
     bytestream.seek(0)
     tar = tarfile.open(fileobj=bytestream)
+    container_image = tar.extractfile(tar.getmembers()[0].name)
+    if container_image is None:
+        raise Exception("Failed to extract image from tarfile")
     with open(host_image_path, "wb+") as f:
-        f.write(tar.extractfile(tar.getmembers()[0].name).read())
+        f.write(container_image.read())
 
 
 def build_fuelignition() -> docker.models.images.Image:
