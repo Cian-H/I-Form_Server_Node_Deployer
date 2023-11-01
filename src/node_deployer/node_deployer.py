@@ -1,6 +1,6 @@
 import typer
 
-from . import config
+from .config import config
 from .autoignition import json_to_img
 from .create_disk import create_ignition_disk
 from .create_img import create_img

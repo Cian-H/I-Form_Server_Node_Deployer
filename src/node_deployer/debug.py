@@ -4,7 +4,7 @@ from typing import Callable
 
 import typer
 
-from . import config
+from .config import config
 
 
 def debug_guard(f: Callable) -> Callable:

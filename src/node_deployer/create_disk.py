@@ -6,7 +6,7 @@ from docker.types import Mount
 import typer
 from typing import Tuple
 
-from . import config
+from .config import config
 from .cli import cli_spinner
 from .create_img import create_img
 from .debug import debug_guard

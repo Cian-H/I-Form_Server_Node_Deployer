@@ -5,7 +5,7 @@ from typing import Annotated
 
 import typer
 
-from . import config
+from .config import config
 from .autoignition import json_to_img
 from .cli import cli_spinner
 from .debug import debug_guard

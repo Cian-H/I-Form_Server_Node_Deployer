@@ -4,7 +4,7 @@ from typing import Callable
 
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from . import config
+from .config import config
 from .utils import Singleton
 
 

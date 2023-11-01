@@ -3,7 +3,7 @@
 def main() -> None:
     """Entry point for the CLI
     """
-    from . import config
+    from .config import config
     config.update_config("cli")
     from .node_deployer import app
     app()
@@ -11,7 +11,7 @@ def main() -> None:
 def debug() -> None:
     """Entry point for the debug CLI
     """
-    from . import config
+    from .config import config
     config.update_config("debug")
     from .node_deployer import app
     

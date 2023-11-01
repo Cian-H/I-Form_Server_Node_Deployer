@@ -13,7 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import typer
 
-from . import config
+from .config import config
 from .cli import cli_spinner
 from .debug import debug_guard
 from .utils import ensure_build_dir
