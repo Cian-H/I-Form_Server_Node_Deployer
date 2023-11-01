@@ -8,7 +8,7 @@ FUELIGNITION_URL = "http://localhost:3000/fuel-ignition/edit"
 FUELIGNITION_BUILD_DIR = "fuel-ignition"
 CWD_MOUNTDIR = "/host_cwd"
 CLIENT_STDOUT = true
-CLEANUP_IMAGES = false
+CLEANUP_IMAGES = true
 CLI = false
 DEBUG = false
 
@@ -24,3 +24,10 @@ CLI = true
 [debug]
 DEBUG = true
 CLI = false
+
+[default.snoop.install]
+snoop = "ss"
+out = "snoop.log"
+
+[default.snoop.snoop]
+depth = 3

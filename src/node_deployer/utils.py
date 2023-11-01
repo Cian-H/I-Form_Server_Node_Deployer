@@ -2,7 +2,7 @@ from functools import wraps
 from pathlib import Path
 from typing import Callable
 
-import config
+from . import config
 
 
 def ensure_build_dir(f: Callable) -> Callable:

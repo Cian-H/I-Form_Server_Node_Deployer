@@ -4,8 +4,8 @@ from typing import Callable
 
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-import config
-from utils import Singleton
+from . import config
+from .utils import Singleton
 
 
 class SingletonProgress(Progress, metaclass=Singleton):

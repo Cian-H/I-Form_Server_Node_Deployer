@@ -4,6 +4,9 @@ version = "0.1.0"
 description = ""
 authors = ["Cian Hughes <cian.hughes@dcu.ie>"]
 readme = "README.md"
+packages = [
+    {include = "node_deployer", from = "src"}
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -20,6 +23,11 @@ fsspec = "^2023.10.0"
 ruff = "^0.1.1"
 black = "^23.10.1"
 snoop = "^0.4.3"
+pytest = "^7.4.3"
+
+[tool.poetry.scripts]
+node_deployer = "node_deployer.__main__:main"
+debug_node_deployer = "node_deployer.__main__:debug"
 
 [build-system]
 requires = ["poetry-core"]

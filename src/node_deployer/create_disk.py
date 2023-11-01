@@ -1,14 +1,18 @@
 from fnmatch import fnmatch
+import ipaddress
 from typing import Annotated
 
+from docker.types import Mount
 import typer
 
-from cli import cli_spinner
-import config
-from create_img import create_img
-from debug import debug_guard
-from docker.types import Mount
-from utils import ensure_build_dir
+from . import config
+from .cli import cli_spinner
+from .create_img import create_img
+from .debug import debug_guard
+from .utils import ensure_build_dir
+
+
+type IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 
 def filter_validation_response(response: str) -> str:
@@ -66,35 +70,86 @@ def write_disk(disk: str) -> None:
 @cli_spinner(description="Creating ignition initialisation disk", total=None)
 @ensure_build_dir
 def create_ignition_disk(
-    disk: str = Annotated[str, typer.Option(help="Path to the disk to write to", prompt=True)],
-    hostname: str = Annotated[str, typer.Option(help="Hostname for the new node", prompt=True)],
-    password: str = Annotated[
+    disk: Annotated[
         str,
         typer.Option(
+            "--disk",
+            "-d",
+            help="Path to the disk to write to",
+            prompt=True,
+        ),
+    ] = None,
+    hostname: Annotated[
+        str,
+        typer.Option(
+            "--hostname",
+            "-h",
+            help="Hostname for the new node",
+            prompt=True,
+        ),
+    ] = "node",
+    password: Annotated[
+        str,
+        typer.Option(
+            "--password",
+            "-p",
             help="Password for the root user on the new node",
             prompt=True,
             confirmation_prompt=True,
             hide_input=True,
         ),
-    ],
-    switch_ip_address: str = Annotated[
-        str, typer.Option(help="IP address of the switch to connect to", prompt=True)
-    ],
-    switch_port: int = Annotated[
-        int, typer.Option(help="Port on the switch to connect to", prompt=True)
-    ],
-    swarm_token: str = Annotated[
-        str, typer.Option(help="Swarm token for connecting to the swarm", prompt=True)
-    ],
+    ] = None,
+    switch_ip: Annotated[
+        IPAddress,
+        typer.Option(
+            "--switch-ip",
+            "-ip",
+            help="IP address of the switch to connect to",
+            prompt=True,
+            parser=ipaddress.ip_address,
+        ),
+    ] = None,
+    switch_port: Annotated[
+        int,
+        typer.Option(
+            "--switch-port",
+            "-sp",
+            help="Port on the switch to connect to",
+            prompt=True,
+            min=1,
+            max=config.MAX_PORT,
+        ),
+    ] = 4789,
+    swarm_token: Annotated[
+        str,
+        typer.Option(
+            "--swarm-token",
+            "-t",
+            help="Swarm token for connecting to the swarm",
+            prompt=True,
+        ),
+    ] = None,
+    debug: Annotated[
+        bool,
+        typer.Option(
+            "--debug",
+            help="Enable debug mode",
+            is_eager=True,
+            is_flag=True,
+            flag_value=True,
+            hidden=not config.DEBUG,
+        )
+    ] = False,
 ) -> None:
     """Writes an ignition image to the specified disk for easy deployment of new nodes to the swarm"""  # noqa
     create_img(
-        hostname,
-        password,
-        switch_ip_address,
-        switch_port,
-        swarm_token,
-        config.BUILD_DIR / "ignition.img",
+        hostname = hostname,
+        password = password,
+        switch_ip = switch_ip,
+        switch_port = switch_port,
+        swarm_token = swarm_token,
+        img_path = config.BUILD_DIR / "ignition.img",
+        debug = debug,
     )
     valid, response = validate()
     if not valid:

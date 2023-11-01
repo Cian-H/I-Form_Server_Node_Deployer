@@ -5,16 +5,17 @@ import tarfile
 import time
 from typing import Annotated
 
-from cli import cli_spinner
-import config
-from debug import debug_guard
 import git
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import typer
-from utils import ensure_build_dir
+
+from . import config
+from .cli import cli_spinner
+from .debug import debug_guard
+from .utils import ensure_build_dir
 
 
 def create_driver():
@@ -114,14 +115,39 @@ def build_fuelignition():
 @cli_spinner(description="Converting json to img", total=None)
 @ensure_build_dir
 def json_to_img(
-    json_path: Path = Annotated[
+    json_path: Annotated[
         Path,
-        typer.Option(help="The fuel-ignition json for configuring the disk image", prompt=True),
-    ],
-    img_path: Path = Annotated[
+        typer.Option(
+            "--json-path", "-i",
+            help="The fuel-ignition json for configuring the disk image",
+            prompt=True,
+            exists=True,
+            dir_okay=False,
+        ),
+    ] = Path("fuelignition.json"),
+    img_path: Annotated[
         Path,
-        typer.Option(help="The file to output the disk image to", prompt=True),
-    ],
+        typer.Option(
+            "--img-path", "-o",
+            help="The file to output the disk image to",
+            prompt=True,
+            dir_okay=False,
+            writable=True,
+            readable=False,
+        ),
+    ] = Path("ignition.img"),
+    debug: Annotated[
+        bool,
+        typer.Option(
+            "--debug",
+            help="Enable debug mode",
+            is_eager=True,
+            is_flag=True,
+            flag_value=True,
+            expose_value=config.DEBUG,
+            hidden=not config.DEBUG,
+        )
+    ] = False,
 ) -> None:
     """Takes a fuel-ignition json file and produces an ignition disk image file"""
     selenium_container = None

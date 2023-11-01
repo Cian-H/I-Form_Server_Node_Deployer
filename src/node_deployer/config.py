@@ -1,7 +1,8 @@
 # flake8: noqa: F821
+# type: ignore
 #* This file sets a number of config constants by modifying its own globals
-#* As a result, F821 is disabled as the intereter cannot be trusted to know
-#* when F821 should be raised.
+#* As a result, F821 and typing is disabled as the interpreter cannot be
+#* trusted to know when F821 or UndefinedVeriable errors should be raised.
 
 from pathlib import Path
 
@@ -10,7 +11,8 @@ import tomllib
 
 
 CLIENT = docker.from_env(version="auto")
-PROJECT_ROOT = Path(__file__).parent.parent.absolute()
+MAX_PORT: int = 65535
+PROJECT_ROOT: Path = Path(__file__).parent.parent.parent.absolute()
 
 type ConfigLabel = str | list[str]
 
@@ -63,8 +65,9 @@ def update_config(config_label: ConfigLabel = "default") -> None:
     apply_config(get_config(config_label))
 
 
-def init() -> None:
-    globals().update(get_config())
+def init(config) -> None:
+    globals().update(get_config(config))
     update_config()
 
-init()
+
+init(config="default")
