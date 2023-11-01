@@ -16,6 +16,11 @@ type IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 
 def load_template() -> dict:
+    """Loads the default template for the ignition configuration
+
+    Returns:
+        dict: The default ignition configuration
+    """
     with open(config.SRC_DIR / "templates/fuelignition.json", "r") as f:
         out = json.load(f)
     return out
@@ -27,6 +32,17 @@ def apply_ignition_settings(
     password: str,
     swarm_config: str,
 ) -> dict:
+    """Applies the specified ignition settings to the template
+
+    Args:
+        template (dict): The template to apply the settings to
+        hostname (str): The hostname to set
+        password (str): The password to set for the root user
+        swarm_config (str): The swarm configuration to set
+
+    Returns:
+        dict: The template with the settings applied
+    """
     ignition_config = template.copy()
     ignition_config["hostname"] = hostname
     ignition_config["login"]["users"][0]["passwd"] = password
@@ -144,7 +160,31 @@ def create_img(
         ),
      ] = False,
 ) -> None:
-    """Creates an ignition image for deploying a new node to the swarm"""
+    """Creates an ignition image for a node that will automatically join a swarm
+
+    Args:
+        hostname (Annotated[ str, typer.Option, optional):
+            The hostname to set for the node.
+            Defaults to "node".
+        password (Annotated[ str, typer.Option, optional):
+            The password to set for the root user on the node.
+            Defaults to None.
+        switch_ip (Annotated[ IPAddress, typer.Option, optional):
+            The IP address of the switch to connect to.
+            Defaults to None.
+        switch_port (Annotated[ int, typer.Option, optional):
+            The port on the switch to connect to.
+            Defaults to 4789.
+        swarm_token (Annotated[ str, typer.Option, optional):
+            The swarm token for connecting to the swarm.
+            Defaults to None.
+        img_path (Annotated[ Path, typer.Option, optional):
+            The path to which the ignition image should be written.
+            Defaults to Path("ignition.img").
+        debug (Annotated[ bool, typer.Option, optional):
+            Enable debug mode.
+            Defaults to False.
+    """
     # get swarm configuration as JSON
     swarm_config = json.dumps(
         {

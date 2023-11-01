@@ -7,13 +7,18 @@ import typer
 from . import config
 
 
-# def merge(f1: Callable) -> Callable:
-    # https://docs.python.org/3/library/functools.html#functools.update_wrapper
-    # wraps, but it combines the signatures of the two functions
-    # This will allow us to add/remove the `debug` arg depending on config context
-
-
 def debug_guard(f: Callable) -> Callable:
+    """A decorator that contextually enables debug mode for the decorated function
+
+    Args:
+        f (Callable): The function to decorate
+
+    Raises:
+        typer.Exit: Exit CLI if the dev group is not installed
+
+    Returns:
+        Callable: The decorated function
+    """
     if not config.DEBUG:
         return f
     try:

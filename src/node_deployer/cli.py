@@ -9,10 +9,20 @@ from .utils import Singleton
 
 
 class SingletonProgress(Progress, metaclass=Singleton):
+    """A singleton progress bar"""
     pass
 
 
 def cli_spinner(*spinner_args, **spinner_kwargs) -> Callable:
+    """A decorator that adds a spinner to the CLI while the decorated function is running
+    
+    Args:
+        *spinner_args: The arguments to pass to the rich spinner object
+        **spinner_kwargs: The keyword arguments to pass to the rich spinner object
+
+    Returns:
+        Callable: The decorated function
+    """
     def decorator(f: Callable) -> Callable:
         # Indent the spinner to match its nesting level
         indent = len(inspect.stack()) - 1

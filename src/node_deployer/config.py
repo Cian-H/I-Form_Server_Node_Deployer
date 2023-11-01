@@ -17,7 +17,17 @@ PROJECT_ROOT: Path = Path(__file__).parent.parent.parent.absolute()
 type ConfigLabel = str | list[str]
 
 
-def get_config(config_label: ConfigLabel = ["default"]) -> dict:
+def get_config(config_label: ConfigLabel = "default") -> dict:
+    """Gets the specified configuration from config.toml
+
+    Args:
+        config_label (ConfigLabel, optional):
+            The label of the configuration to get.
+            Defaults to "default".
+
+    Returns:
+        dict: The specified configuration
+    """
     if isinstance(config_label, str):
         config_label = [config_label]
     with open(PROJECT_ROOT / "config.toml", "rb") as f:
@@ -29,6 +39,12 @@ def get_config(config_label: ConfigLabel = ["default"]) -> dict:
 
 
 def finalise_config(config: dict) -> None:
+    """Finalises the configuration by converting paths to Path objects and
+    appropriately setting secondary parameters such as relative paths
+
+    Args:
+        config (dict): The configuration to finalise
+    """
     # First, convert base paths to Path objects
     for k, v in config.items():
         match k:
@@ -57,17 +73,34 @@ def finalise_config(config: dict) -> None:
 
 
 def apply_config(config: dict) -> None:
+    """Applies the specified configuration to this module's globals
+
+    Args:
+        config (dict): The configuration to apply
+    """
     finalise_config(config)
     globals().update(config)
     
 
 def update_config(config_label: ConfigLabel = "default") -> None:
+    """Updates the configuration to the specified configuration
+
+    Args:
+        config_label (ConfigLabel, optional):
+            The label of the configuration to update to.
+            Defaults to "default".
+    """
     apply_config(get_config(config_label))
 
 
-def init(config) -> None:
-    globals().update(get_config(config))
+def init(config_label: ConfigLabel) -> None:
+    """Initialises the configuration module
+
+    Args:
+        config_label (ConfigLabel): The configuration to initialise with
+    """
+    globals().update(get_config(config_label))
     update_config()
 
 
-init(config="default")
+init(config_label="default")

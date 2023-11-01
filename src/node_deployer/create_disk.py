@@ -4,6 +4,7 @@ from typing import Annotated
 
 from docker.types import Mount
 import typer
+from typing import Tuple
 
 from . import config
 from .cli import cli_spinner
@@ -16,6 +17,14 @@ type IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 
 def filter_validation_response(response: str) -> str:
+    """Filters out erroneous warnings from the validation response
+
+    Args:
+        response (str): The response to filter
+
+    Returns:
+        str: The filtered response
+    """
     return "\n".join(
         filter(
             # Filter out the warning about unused key human_readable, this always exists in
@@ -27,6 +36,11 @@ def filter_validation_response(response: str) -> str:
 
 
 def validation_result() -> str:
+    """Returns the response resulting from a validation of the ignition image
+
+    Returns:
+        str: The response from the validation
+    """
     dockerfile = config.DOCKERFILE_DIR / "validate.dockerfile"
     image, _ = config.CLIENT.images.build(
         path=".",
@@ -50,7 +64,13 @@ def validation_result() -> str:
 
 
 @cli_spinner(description="Validating ignition image", total=None)
-def validate() -> (bool, str):
+def validate() -> Tuple[bool, str]:
+    """Validates the ignition image
+
+    Returns:
+        Tuple[bool, str]: A tuple containing a boolean indicating whether
+        the validation was successful and the response from the validation
+    """
     response = validation_result().decode()
     response = filter_validation_response(response)
     return (not bool(response), response)
@@ -58,6 +78,11 @@ def validate() -> (bool, str):
 
 @cli_spinner(description="Writing ignition image to disk", total=None)
 def write_disk(disk: str) -> None:
+    """Writes the ignition image to the specified disk
+
+    Args:
+        disk (str): The disk to write to
+    """
     config.CLIENT.containers.run(
         "alpine",
         mounts=[config.CWD_MOUNT, Mount("/ignition_disk", disk, type="bind")],
@@ -141,7 +166,34 @@ def create_ignition_disk(
         )
     ] = False,
 ) -> None:
-    """Writes an ignition image to the specified disk for easy deployment of new nodes to the swarm"""  # noqa
+    """Creates an ignition image and writes it to the specified disk
+
+    Args:
+        disk (Annotated[ str, typer.Option, optional):
+            The disk to write to.
+            Defaults to None.
+        hostname (Annotated[ str, typer.Option, optional):
+            The hostname for the new node.
+            Defaults to "node".
+        password (Annotated[ str, typer.Option, optional):
+            The password for the root user on the new node.
+            Defaults to None.
+        switch_ip (Annotated[ IPAddress, typer.Option, optional):
+            The IP address of the switch to connect to.
+            Defaults to None.
+        switch_port (Annotated[ int, typer.Option, optional):
+            The port on the switch to connect to.
+            Defaults to 4789.
+        swarm_token (Annotated[ str, typer.Option, optional):
+            The swarm token for connecting to the swarm.
+            Defaults to None.
+        debug (Annotated[ bool, typer.Option, optional):
+            Enable debug mode.
+            Defaults to False.
+
+    Raises:
+        typer.Exit: Exit CLI if the ignition image is invalid
+    """
     create_img(
         hostname = hostname,
         password = password,

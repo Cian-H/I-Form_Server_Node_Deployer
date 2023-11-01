@@ -5,6 +5,7 @@ import tarfile
 import time
 from typing import Annotated
 
+import docker
 import git
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -18,7 +19,12 @@ from .debug import debug_guard
 from .utils import ensure_build_dir
 
 
-def create_driver():
+def create_driver() -> webdriver.Remote:
+    """Creates a selenium webdriver instance
+
+    Returns:
+        webdriver.Remote: The created webdriver instance
+    """
     driver = webdriver.Remote(
         "http://127.0.0.1:4444",
         options=webdriver.FirefoxOptions(),
@@ -27,7 +33,20 @@ def create_driver():
     return driver
 
 
-def convert_json_via_fuelignition(container, driver, fuelignition_json, img_path):
+def convert_json_via_fuelignition(
+    container: docker.models.containers.Container, 
+    driver: webdriver.Remote,
+    fuelignition_json: Path, 
+    img_path: Path,
+) -> None:
+    """Converts a fuel-ignition json file to an ignition disk image file
+
+    Args:
+        container (docker.models.containers.Container): The selenium container
+        driver (webdriver.Remote): The selenium webdriver instance
+        fuelignition_json (Path): The path to the fuel-ignition json file
+        img_path (Path): The path to the output ignition disk image file
+    """
     driver.get(config.FUELIGNITION_URL)
     # Navigate to "Load Settings from" and upload the json
     load_from = driver.find_element(By.NAME, "load_from")
@@ -66,7 +85,12 @@ def convert_json_via_fuelignition(container, driver, fuelignition_json, img_path
         f.write(tar.extractfile(tar.getmembers()[0].name).read())
 
 
-def build_fuelignition():
+def build_fuelignition() -> docker.models.images.Image:
+    """Builds the fuel-ignition docker image
+
+    Returns:
+        docker.models.images.Image: The built docker image
+    """
     # Make sure the local fuel-ignition repo is up to date
     if (not config.FUELIGNITION_BUILD_DIR.exists()) or (
         len(tuple(config.FUELIGNITION_BUILD_DIR.iterdir())) == 0
@@ -149,7 +173,22 @@ def json_to_img(
         )
     ] = False,
 ) -> None:
-    """Takes a fuel-ignition json file and produces an ignition disk image file"""
+    """Converts a fuel-ignition json file to an ignition disk image file
+
+    Args:
+        json_path (Annotated[ Path, typer.Option, optional):
+            The path to the fuel-ignition json file.
+            Defaults to Path("fuelignition.json").
+        img_path (Annotated[ Path, typer.Option, optional):
+            The path to the output ignition disk image file.
+            Defaults to Path("ignition.img").
+        debug (Annotated[ bool, typer.Option, optional):
+            Enable debug mode.
+            Defaults to False.
+
+    Raises:
+        e: Any exception raised during execution
+    """
     selenium_container = None
     fuelignition_container = None
     fuelignition_image = None
