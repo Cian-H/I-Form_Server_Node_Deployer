@@ -5,7 +5,7 @@ description = ""
 authors = ["Cian Hughes <cian.hughes@dcu.ie>"]
 readme = "README.md"
 packages = [
-    {include = "node_deployer", from = "src"}
+    {include = "node_deployer", from = "src"},
 ]
 
 [tool.poetry.dependencies]

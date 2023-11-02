@@ -10,23 +10,26 @@ import git
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait  # type: ignore
 import typer
 
-from .config import config
 from .cli import cli_spinner
+from .config import config
 from .debug import debug_guard
-from .utils import ensure_build_dir
+from .utils import ensure_build_dir, next_free_tcp_port
 
 
-def create_driver() -> webdriver.Remote:
+def create_driver(port: int) -> webdriver.Remote:
     """Creates a selenium webdriver instance
+
+    Args:
+        port (int): The port to connect to
 
     Returns:
         webdriver.Remote: The created webdriver instance
     """
     driver = webdriver.Remote(
-        "http://127.0.0.1:4444",
+        f"http://127.0.0.1:{port}",
         options=webdriver.FirefoxOptions(),
     )
     driver.implicitly_wait(10)
@@ -34,7 +37,7 @@ def create_driver() -> webdriver.Remote:
 
 
 def convert_json_via_fuelignition(
-    container: docker.models.containers.Container, 
+    container: docker.models.containers.Container,  # type: ignore
     driver: webdriver.Remote,
     fuelignition_json: Path, 
     img_path: Path,
@@ -88,7 +91,7 @@ def convert_json_via_fuelignition(
         f.write(container_image.read())
 
 
-def build_fuelignition() -> docker.models.images.Image:
+def build_fuelignition() -> docker.models.images.Image: # type: ignore
     """Builds the fuel-ignition docker image
 
     Returns:
@@ -196,12 +199,14 @@ def json_to_img(
     fuelignition_container = None
     fuelignition_image = None
     try:
+        driver_port = next_free_tcp_port(4444)
         # Initialise containers
         selenium_container = config.CLIENT.containers.run(
             "selenium/standalone-firefox:latest",
             detach=True,
             remove=True,
-            ports={4444: 4444, 7900: 7900},
+            network_mode="bridge",
+            ports={4444: driver_port},
             mounts=[
                 config.CWD_MOUNT,
             ],
@@ -224,7 +229,7 @@ def json_to_img(
         ):
             time.sleep(0.1)
         # Now, create the webdriver and convert the json to an img
-        driver = create_driver()
+        driver = create_driver(driver_port)
         convert_json_via_fuelignition(selenium_container, driver, json_path, img_path)
         driver.quit()
     except Exception as e:

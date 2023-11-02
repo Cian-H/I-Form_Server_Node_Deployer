@@ -2,8 +2,7 @@
   "login": {
     "users": [
       {
-        "name": "root",
-        "hash_type": "bcrypt"
+        "name": "root"
       }
     ]
   },

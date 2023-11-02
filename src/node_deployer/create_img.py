@@ -1,7 +1,7 @@
 import ipaddress
 import json
 from pathlib import Path
-from typing import Annotated, Optional, Union
+from typing import Annotated, Optional
 
 import typer
 
@@ -13,7 +13,7 @@ from .utils import ensure_build_dir
 
 # When PEP695 is supported this line should be:
 # type IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
-IPAddress = Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
+IPAddress = ipaddress._IPAddressBase
 
 
 def load_template() -> dict:
@@ -33,7 +33,7 @@ def apply_ignition_settings(
     password: str,
     swarm_config: str,
 ) -> dict:
-    """Applies the specified ignition settings to the template
+    """Applies the specified ignition settings to the given template
 
     Args:
         template (dict): The template to apply the settings to
@@ -46,7 +46,11 @@ def apply_ignition_settings(
     """
     ignition_config = template.copy()
     ignition_config["hostname"] = hostname
-    ignition_config["login"]["users"][0]["passwd"] = password
+    if password:
+        ignition_config["login"]["users"][0]["passwd"] = password
+        ignition_config["login"]["users"][0]["hash_type"] = "bcrypt"
+    elif not config.TESTING:
+        raise ValueError("Password must be specified")
 
     # Add files that will define a service to ensure that the node joins the swarm
     with open(config.SRC_DIR / "templates/join_swarm.sh", "r") as f1, open(
@@ -186,6 +190,12 @@ def create_img(
             Enable debug mode.
             Defaults to False.
     """
+    # Guards against the user not specifying a password
+    if password is None and not config.TESTING:
+        raise typer.BadParameter("Password must be specified")
+    elif password is None:
+        password = ""
+    
     # get swarm configuration as JSON
     swarm_config = json.dumps(
         {
@@ -194,10 +204,6 @@ def create_img(
             "SWARM_TOKEN": swarm_token,
         }
     )
-
-    # Guards against the user not specifying a password
-    if password is None:
-        raise typer.BadParameter("Password must be specified")
 
     # Create ignition configuration
     ignition_config = apply_ignition_settings(

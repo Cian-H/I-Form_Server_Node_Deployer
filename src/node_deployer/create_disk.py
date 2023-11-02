@@ -1,6 +1,6 @@
 from fnmatch import fnmatch
 import ipaddress
-from typing import Annotated, Optional, Union
+from typing import Annotated, Optional
 
 from docker.types import Mount
 import typer
@@ -14,7 +14,7 @@ from .utils import ensure_build_dir
 
 # When PEP695 is supported this line should be:
 # type IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
-IPAddress = Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
+IPAddress = ipaddress._IPAddressBase
 
 
 def filter_validation_response(response: str) -> str:
@@ -89,6 +89,7 @@ def write_disk(disk: str) -> None:
         mounts=[config.CWD_MOUNT, Mount("/ignition_disk", disk, type="bind")],
         privileged=True,
         command=f"dd if={config.CWD_MOUNTDIR}/build/ignition.img of=/ignition_disk",
+        remove=config.CLEANUP_CONTAINERS,
     )
 
 

@@ -14,6 +14,7 @@ def ensure_build_dir(f: Callable) -> Callable:
     Returns:
         Callable: The decorated function
     """
+
     @wraps(f)
     def wrapper(*args, **kwargs):
         Path(config.BUILD_DIR).mkdir(exist_ok=True, parents=True)
@@ -24,8 +25,9 @@ def ensure_build_dir(f: Callable) -> Callable:
 
 class Singleton(type):
     """A singleton metaclass"""
+
     _instance = None
-    
+
     def __call__(cls, *args, **kwargs):
         """Creates a new instance of the class if one does not already exist
 
@@ -35,3 +37,32 @@ class Singleton(type):
         if cls._instance is None:
             cls._instance = super().__call__(*args, **kwargs)
         return cls._instance
+
+
+def next_free_tcp_port(port: int) -> int:
+    """Finds the next free port after the specified port
+
+    Args:
+        port (int): The port to start searching from
+        
+    Raises:
+        ValueError: If no free ports are found
+
+    Returns:
+        int: The next free port
+    """
+    containers = config.CLIENT.containers.list(all=True)
+    ports = []
+    for container in containers:
+        port_values = container.ports.values()
+        if not port_values:
+            continue
+        for x in list(container.ports.values())[0]:
+            ports.append(int(x["HostPort"]))
+    ports = set(ports)
+    while port in ports:
+        port += 1
+        if port > 65535:
+            raise ValueError("No free ports")
+    return port
+    

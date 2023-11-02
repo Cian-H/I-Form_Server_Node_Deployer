@@ -8,7 +8,14 @@ import tomllib
 
 CLIENT = docker.from_env(version="auto")
 MAX_PORT: int = 65535
-PROJECT_ROOT: Path = Path(__file__).parent.parent.parent.absolute()
+
+def __get_project_root():
+    r = Path(__file__)
+    while r.name != "src":
+        r = r.parent
+    return r.parent
+
+PROJECT_ROOT: Path = __get_project_root()
 
 ConfigLabel = Union[str, list[str]] # After PEP695 support: type ConfigLabel = str | list[str]
 
@@ -63,19 +70,19 @@ class Config(SimpleNamespace):
         for k, v in config.items():
             match k:
                 case "SRC_DIR" | "BUILD_DIR":
-                    config[k] = Path(v).absolute()
+                    config[k] = Path(PROJECT_ROOT / v).absolute()
                 case "CWD_MOUNTDIR":
                     config[k] = Path(v)
         # Then, get required paths from config or globals if not present
-        build_dir = config.get("BUILD_DIR", self.BUILD_DIR)
-        cwd_mountdir = config.get("CWD_MOUNTDIR", self.CWD_MOUNTDIR)
-        src_dir = config.get("SRC_DIR", self.SRC_DIR)
+        build_dir = Path(config.get("BUILD_DIR", self.BUILD_DIR)).absolute()
+        cwd_mountdir = Path(config.get("CWD_MOUNTDIR", self.CWD_MOUNTDIR))
+        src_dir = Path(config.get("SRC_DIR", self.SRC_DIR)).absolute()
         # Finally, construct the secondary parameters
         config["FUELIGNITION_BUILD_DIR"] = build_dir / config.get(
             "FUELIGNITION_BUILD_DIR", self.FUELIGNITION_BUILD_DIR
         )
         config["DOCKERFILE_DIR"] = src_dir / config.get("DOCKERFILE_DIR", self.DOCKERFILE_DIR)
-        config["CWD_MOUNT"] = docker.types.Mount(
+        config["CWD_MOUNT"] = docker.types.Mount(  # type: ignore <- I really wish docker-py had typeshed stubs
             target=str(cwd_mountdir),
             source=str(PROJECT_ROOT),
             type="bind",
