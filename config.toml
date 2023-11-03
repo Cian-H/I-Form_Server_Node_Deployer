@@ -25,6 +25,7 @@ CLI = true
 [debug]
 DEBUG = true
 CLI = false
+CLEANUP_IMAGES = false
 
 [test]
 TESTING = true

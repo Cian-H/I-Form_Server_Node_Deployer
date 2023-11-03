@@ -1,6 +1,7 @@
 from functools import wraps
 from pathlib import Path
 from typing import Callable
+import docker
 
 from .config import config
 
@@ -51,14 +52,22 @@ def next_free_tcp_port(port: int) -> int:
     Returns:
         int: The next free port
     """
-    containers = config.CLIENT.containers.list(all=True)
     ports = []
-    for container in containers:
-        port_values = container.ports.values()
-        if not port_values:
-            continue
-        for x in list(container.ports.values())[0]:
-            ports.append(int(x["HostPort"]))
+    try:
+        containers = config.CLIENT.containers.list(all=True)
+        ports = []
+        for container in containers:
+            port_values = container.ports.values()
+            if not port_values:
+                continue
+            for x in list(container.ports.values())[0]:
+                ports.append(int(x["HostPort"]))
+    except docker.errors.NotFound:  # type: ignore
+        #* This error is raised if container list changes between getting the list and
+        #* getting the ports. If this happens, just try again
+        return next_free_tcp_port(port)
+    if not ports:
+        return port
     ports = set(ports)
     while port in ports:
         port += 1

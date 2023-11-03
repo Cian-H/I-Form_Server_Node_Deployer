@@ -1,0 +1,11 @@
+[create_img.create_img]
+hostname = "test_hostname"
+password = ""
+switch_ip = "192.168.1.1"
+switch_port = 42
+swarm_token = "SWMTKN-1-THISISATESTSWARMTOKENFORTESTINGPURPOSESANDTHATMEANSITNEEDSTOBEQUITELONG"
+
+[create_img.apply_ignition_settings]
+hostname = "test_hostname"
+password = ""
+swarm_config = {SWITCH_IP_ADDRESS="192.168.1.1", SWITCH_PORT=42, SWARM_TOKEN="SWMTKN-1-THISISATESTSWARMTOKENFORTESTINGPURPOSESANDTHATMEANSITNEEDSTOBEQUITELONG"}

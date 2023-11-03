@@ -47,7 +47,10 @@ def validation_result() -> str:
         path=".",
         dockerfile=str(dockerfile),
         tag="validate",
-        buildargs={"CWD_MOUNTDIR": str(config.CWD_MOUNTDIR)},
+        buildargs={
+            "CWD_MOUNTDIR": str(config.CWD_MOUNTDIR),
+            "BUILD_DIR": str(config.BUILD_DIR.relative_to(config.PROJECT_ROOT)),
+        },
         rm=config.CLEANUP_IMAGES,
         pull=True,
         quiet=True,
@@ -57,7 +60,7 @@ def validation_result() -> str:
         mounts=[
             config.CWD_MOUNT,
         ],
-        remove=True,
+        remove=config.CLEANUP_IMAGES,
     )
     if config.CLEANUP_IMAGES:
         image.remove(force=True)

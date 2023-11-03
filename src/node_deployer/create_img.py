@@ -31,7 +31,7 @@ def apply_ignition_settings(
     template: dict,
     hostname: str,
     password: str,
-    swarm_config: str,
+    swarm_config: dict,
 ) -> dict:
     """Applies the specified ignition settings to the given template
 
@@ -46,8 +46,8 @@ def apply_ignition_settings(
     """
     ignition_config = template.copy()
     ignition_config["hostname"] = hostname
+    ignition_config["login"]["users"][0]["passwd"] = password
     if password:
-        ignition_config["login"]["users"][0]["passwd"] = password
         ignition_config["login"]["users"][0]["hash_type"] = "bcrypt"
     elif not config.TESTING:
         raise ValueError("Password must be specified")
@@ -66,7 +66,7 @@ def apply_ignition_settings(
             "source_type": "data",
             "mode": 420,
             "overwrite": True,
-            "data_content": swarm_config,
+            "data_content": json.dumps(swarm_config),
         },
         {
             "path": "/root/join_swarm.sh",
@@ -197,13 +197,11 @@ def create_img(
         password = ""
     
     # get swarm configuration as JSON
-    swarm_config = json.dumps(
-        {
-            "SWITCH_IP_ADDRESS": str(switch_ip),
-            "SWITCH_PORT": switch_port,
-            "SWARM_TOKEN": swarm_token,
-        }
-    )
+    swarm_config = {
+        "SWITCH_IP_ADDRESS": str(switch_ip),
+        "SWITCH_PORT": switch_port,
+        "SWARM_TOKEN": swarm_token,
+    }
 
     # Create ignition configuration
     ignition_config = apply_ignition_settings(

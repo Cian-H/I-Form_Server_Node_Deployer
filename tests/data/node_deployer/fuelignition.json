@@ -1,0 +1,66 @@
+{
+    "login": {
+        "users": [
+            {
+                "name": "root",
+                "passwd": ""
+            }
+        ]
+    },
+    "network": {
+        "interfaces": [
+            {
+                "name": "eth0",
+                "ipv4": {
+                    "network_type": "DHCP",
+                    "auto_dns_enabled": true
+                },
+                "ipv6": {
+                    "network_type": "DHCP",
+                    "auto_dns_enabled": true
+                }
+            }
+        ]
+    },
+    "systemd": {
+        "units": [
+            {
+                "name": "cockpit.socket.service",
+                "enabled": "yes"
+            },
+            {
+                "name": "docker.service",
+                "enabled": "yes"
+            },
+            {
+                "name": "join_swarm.service",
+                "enabled": true,
+                "contents": "[Unit]\nDescription=Ensure that node joins a swarm on startup\n\n[Service]\nExecStart=/root/join_swarm.sh\n\n[Install]\nWantedBy=multi-user.target"
+            }
+        ]
+    },
+    "package": {
+        "install": [
+            "patterns-microos-cockpit, docker, jq"
+        ]
+    },
+    "hostname": "test_hostname",
+    "storage": {
+        "files": [
+            {
+                "path": "/root/join_swarm.json",
+                "source_type": "data",
+                "mode": 420,
+                "overwrite": true,
+                "data_content": "{\"SWITCH_IP_ADDRESS\": \"192.168.1.1\", \"SWITCH_PORT\": 42, \"SWARM_TOKEN\": \"SWMTKN-1-THISISATESTSWARMTOKENFORTESTINGPURPOSESANDTHATMEANSITNEEDSTOBEQUITELONG\"}"
+            },
+            {
+                "path": "/root/join_swarm.sh",
+                "source_type": "data",
+                "mode": 420,
+                "overwrite": true,
+                "data_content": "#!/bin/bash\n\nif [[ $EUID -ne 0 ]]; then\n   echo \"This script must be run as root\" \n   exit 1\nfi\n\n# Load the config file into variables\neval \"$(jq -r 'to_entries[] | \"export \\(.key)=\\(.value | @sh)\"' /root/join_swarm.json)\"\n\nif [[ $(docker info | grep Swarm | awk '{print $2}') == \"inactive\" ]]; then\n    docker swarm join --token $SWARM_TOKEN [$SWITCH_IP_ADDRESS]:$SWITCH_PORT\nelse\n    echo \"This node is already part of a swarm\"\n    docker info -f json | jq .Swarm\nfi\n"
+            }
+        ]
+    }
+}

@@ -73,3 +73,11 @@ lines-after-imports = 2
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+pythonpath = [
+    ".venv/bin/python",
+]

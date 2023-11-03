@@ -76,7 +76,7 @@ def convert_json_via_fuelignition(
     image_file = container.exec_run("ls /home/seluser/Downloads/").output.decode().split()[0]
     # Finally, fetch the image file from the container
     client_image_path = f"/home/seluser/Downloads/{image_file}"
-    host_image_path = config.SRC_DIR / img_path
+    host_image_path = config.PROJECT_ROOT / img_path
     if host_image_path.exists():
         host_image_path.unlink()
     filestream = container.get_archive(client_image_path)[0]
@@ -211,6 +211,8 @@ def json_to_img(
                 config.CWD_MOUNT,
             ],
         )
+        while config.SELENIUM_INIT_MESSAGE not in selenium_container.logs().decode():
+            time.sleep(0.1)
         fuelignition_image = build_fuelignition()
         fuelignition_container = config.CLIENT.containers.run(
             fuelignition_image,
@@ -218,11 +220,7 @@ def json_to_img(
             remove=True,
             network_mode=f"container:{selenium_container.id}",
         )
-        # Wait for the containers to finish starting up
-        while config.SELENIUM_INIT_MESSAGE not in selenium_container.logs().decode():
-            time.sleep(0.1)
-            for event in config.CLIENT.events(decode=True):
-                print(event)
+        # Wait for the container to finish starting up
         while not fnmatch(
             fuelignition_container.logs().decode().strip().split("\n")[-1].strip(),
             config.FUELIGNITION_INIT_MESSAGE,
