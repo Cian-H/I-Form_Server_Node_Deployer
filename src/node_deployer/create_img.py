@@ -163,7 +163,7 @@ def create_img(
             flag_value=True,
             hidden=not config.DEBUG,
         ),
-     ] = False,
+    ] = False,
 ) -> None:
     """Creates an ignition image for a node that will automatically join a swarm
 
@@ -195,7 +195,7 @@ def create_img(
         raise typer.BadParameter("Password must be specified")
     elif password is None:
         password = ""
-    
+
     # get swarm configuration as JSON
     swarm_config = {
         "SWITCH_IP_ADDRESS": str(switch_ip),

@@ -39,7 +39,7 @@ def create_driver(port: int) -> webdriver.Remote:
 def convert_json_via_fuelignition(
     container: docker.models.containers.Container,  # type: ignore
     driver: webdriver.Remote,
-    fuelignition_json: Path, 
+    fuelignition_json: Path,
     img_path: Path,
 ) -> None:
     """Converts a fuel-ignition json file to an ignition disk image file
@@ -91,7 +91,7 @@ def convert_json_via_fuelignition(
         f.write(container_image.read())
 
 
-def build_fuelignition() -> docker.models.images.Image: # type: ignore
+def build_fuelignition() -> docker.models.images.Image:  # type: ignore
     """Builds the fuel-ignition docker image
 
     Returns:
@@ -148,7 +148,8 @@ def json_to_img(
     json_path: Annotated[
         Path,
         typer.Option(
-            "--json-path", "-i",
+            "--json-path",
+            "-i",
             help="The fuel-ignition json for configuring the disk image",
             prompt=True,
             exists=True,
@@ -158,7 +159,8 @@ def json_to_img(
     img_path: Annotated[
         Path,
         typer.Option(
-            "--img-path", "-o",
+            "--img-path",
+            "-o",
             help="The file to output the disk image to",
             prompt=True,
             dir_okay=False,
@@ -176,7 +178,7 @@ def json_to_img(
             flag_value=True,
             expose_value=config.DEBUG,
             hidden=not config.DEBUG,
-        )
+        ),
     ] = False,
 ) -> None:
     """Converts a fuel-ignition json file to an ignition disk image file

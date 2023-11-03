@@ -168,7 +168,7 @@ def create_ignition_disk(
             is_flag=True,
             flag_value=True,
             hidden=not config.DEBUG,
-        )
+        ),
     ] = False,
 ) -> None:
     """Creates an ignition image and writes it to the specified disk
@@ -202,15 +202,15 @@ def create_ignition_disk(
     # Guard against the user specifying no disk
     if disk is None:
         raise typer.BadParameter("No disk specified")
-    
+
     create_img(
-        hostname = hostname,
-        password = password,
-        switch_ip = switch_ip,
-        switch_port = switch_port,
-        swarm_token = swarm_token,
-        img_path = config.BUILD_DIR / "ignition.img",
-        debug = debug,
+        hostname=hostname,
+        password=password,
+        switch_ip=switch_ip,
+        switch_port=switch_port,
+        swarm_token=swarm_token,
+        img_path=config.BUILD_DIR / "ignition.img",
+        debug=debug,
     )
     valid, response = validate()
     if not valid:

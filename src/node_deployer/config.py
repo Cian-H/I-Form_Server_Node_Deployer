@@ -9,15 +9,17 @@ import tomllib
 CLIENT = docker.from_env(version="auto")
 MAX_PORT: int = 65535
 
+
 def __get_project_root():
     r = Path(__file__)
     while r.name != "src":
         r = r.parent
     return r.parent
 
+
 PROJECT_ROOT: Path = __get_project_root()
 
-ConfigLabel = Union[str, list[str]] # After PEP695 support: type ConfigLabel = str | list[str]
+ConfigLabel = Union[str, list[str]]  # After PEP695 support: type ConfigLabel = str | list[str]
 
 
 class Config(SimpleNamespace):
@@ -82,7 +84,8 @@ class Config(SimpleNamespace):
             "FUELIGNITION_BUILD_DIR", self.FUELIGNITION_BUILD_DIR
         )
         config["DOCKERFILE_DIR"] = src_dir / config.get("DOCKERFILE_DIR", self.DOCKERFILE_DIR)
-        config["CWD_MOUNT"] = docker.types.Mount(  # type: ignore <- I really wish docker-py had typeshed stubs
+        # I really wish docker-py had typeshed stubs
+        config["CWD_MOUNT"] = docker.types.Mount(  # type: ignore
             target=str(cwd_mountdir),
             source=str(PROJECT_ROOT),
             type="bind",
