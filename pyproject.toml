@@ -6,6 +6,7 @@ authors = ["Cian Hughes <cian.hughes@dcu.ie>"]
 readme = "README.md"
 packages = [
     {include = "node_deployer", from = "src"},
+    {include = "node_deployer_gui", from = "src"},
 ]
 
 [tool.poetry.dependencies]
@@ -26,6 +27,14 @@ snoop = "^0.4.3"
 pytest = "^7.4.3"
 mypy = "^1.6.1"
 docker-stubs = {git = "https://github.com/rdozier-work/docker-stubs"}
+
+
+[tool.poetry.group.gui.dependencies]
+flet = "^0.11.0"
+
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.5.3"
 
 [tool.poetry.scripts]
 node_deployer = "node_deployer.__main__:main"
