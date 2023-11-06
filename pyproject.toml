@@ -27,6 +27,9 @@ pytest = "^7.4.3"
 mypy = "^1.6.1"
 docker-stubs = {git = "https://github.com/rdozier-work/docker-stubs"}
 
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.5.3"
+
 [tool.poetry.scripts]
 node_deployer = "node_deployer.__main__:main"
 debug_node_deployer = "node_deployer.__main__:debug"
