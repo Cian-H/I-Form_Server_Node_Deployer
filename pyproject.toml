@@ -18,7 +18,6 @@ requests = "^2.31.0"
 gitpython = "^3.1.40"
 fsspec = "^2023.10.0"
 
-
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.1"
 black = "^23.10.1"
