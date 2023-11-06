@@ -8,10 +8,20 @@ nav:
   - Getting Started:
     - Installation: installation.md
     - Usage: usage.md
-  - Reference:
+  - CLI Usage:
     - Commands: commands.md
     - Configuration: configuration.md
     - Deployment: deployment.md
+  - Reference:
+    - Documentation:
+      - autoignition: src/autoignition.md
+      - create_img: src/create_img.md
+      - create_disk: src/create_disk.md
+    # - FAQ: faq.md
     # - Troubleshooting: troubleshooting.md
     # - Changelog: changelog.md
     # - License: license.md
+
+plugins:
+  - search
+  - mkdocstrings
