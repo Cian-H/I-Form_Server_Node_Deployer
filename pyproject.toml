@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "i-form-server-node-deployer"
 version = "0.1.0"
-description = ""
+description = "A tool for automatically deploying nodes in a cluster server for research environments."
+urls={github = "https://github.com/Cian-H/I-Form_Server_Node_Deployer"}
 authors = ["Cian Hughes <cian.hughes@dcu.ie>"]
 readme = "README.md"
+license = "MIT"
 packages = [
     {include = "node_deployer", from = "src"},
     {include = "node_deployer_gui", from = "src"},
@@ -18,7 +20,8 @@ docker = "^6.1.3"
 requests = "^2.31.0"
 gitpython = "^3.1.40"
 fsspec = "^2023.10.0"
-
+mkdocs-git-revision-date-localized-plugin = "^1.2.1"
+mkdocs-material = {extras = ["all"], version = "^9.4.8"}
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.1"
@@ -28,17 +31,21 @@ pytest = "^7.4.3"
 mypy = "^1.6.1"
 docker-stubs = {git = "https://github.com/rdozier-work/docker-stubs"}
 
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.5.3"
+mkdocstrings = {extras = ["python"], version = "^0.23.0"}
+mkdocs-material = "^9.4.8"
+
 
 [tool.poetry.group.gui.dependencies]
 flet = "^0.11.0"
 
 
-[tool.poetry.group.docs.dependencies]
-mkdocs = "^1.5.3"
 
 [tool.poetry.scripts]
 node_deployer = "node_deployer.__main__:main"
 debug_node_deployer = "node_deployer.__main__:debug"
+build_docs = "scripts.docs:main"
 
 [build-system]
 requires = ["poetry-core"]

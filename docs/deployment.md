@@ -1,0 +1,1 @@
+This tool creates an [ignition drive](https://coreos.github.io/ignition/) that can be used with a [OpenSUSE MicroOS self-install drive](https://get.opensuse.org/microos/) to automatically deploy new nodes to the swarm.
