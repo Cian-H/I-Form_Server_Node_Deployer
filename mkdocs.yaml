@@ -22,6 +22,9 @@ nav:
     # - Changelog: changelog.md
     # - License: license.md
 
+# markdown_extensions: 
+#   - mkdocs-typer
+
 plugins:
   - search
   - mkdocstrings
