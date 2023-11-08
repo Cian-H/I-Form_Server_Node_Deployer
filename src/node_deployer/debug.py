@@ -44,7 +44,7 @@ def debug_guard(f: Callable) -> Callable:
         debug_f = get_debug_f(f)
         if kwargs.get("debug", False):
             # Snoop depth is set to compensate for wrapper stack frames
-            return debug_f(*args, **kwargs)  # noqa: F821 #* ss is installed in debug_mode
+            return debug_f(*args, **kwargs)
         else:
             return f(*args, **kwargs)
 

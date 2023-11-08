@@ -1,5 +1,4 @@
 from fnmatch import fnmatch
-import ipaddress
 from typing import Annotated, Optional
 
 from docker.types import Mount
@@ -9,12 +8,8 @@ from .cli import cli_spinner
 from .config import config
 from .create_img import create_img
 from .debug import debug_guard
+from .ip_interface import IPAddress
 from .utils import ensure_build_dir
-
-
-# When PEP695 is supported this line should be:
-# type IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
-IPAddress = ipaddress._IPAddressBase
 
 
 def filter_validation_response(response: str) -> str:
@@ -136,7 +131,7 @@ def create_ignition_disk(
             "-ip",
             help="IP address of the switch to connect to",
             prompt=True,
-            parser=ipaddress.ip_address,
+            parser=IPAddress,
         ),
     ] = None,
     switch_port: Annotated[
