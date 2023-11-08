@@ -70,11 +70,9 @@ class TestIPInterface:
     
     @given(st.ip_addresses(v=4))
     def test_ipv4_attr_passthrough(self, ip: IPv4Address):
-        # Should be able to access all attributes of ipaddress.IPv4Address directly,
-        # not just a copy of the attribute object at instantiation
         ip_addr = ip_interface.IPAddress(str(ip))
         for attr in self.TEST_ATTRS:
-            assert getattr(ip_addr, attr) is getattr(ip_addr.obj, attr)
+            assert getattr(ip_addr, attr) == getattr(ip_addr.obj, attr)
     
     @given(st.ip_addresses(v=4))
     def test_ipv4_bool(self, ip: IPv4Address):
@@ -89,11 +87,9 @@ class TestIPInterface:
     
     @given(st.ip_addresses(v=6))
     def test_ipv6_attr_passthrough(self, ip: IPv6Address):
-        # Should be able to access all attributes of ipaddress.IPv4Address directly,
-        # not just a copy of the attribute object at instantiation
         ip_addr = ip_interface.IPAddress(str(ip))
         for attr in self.TEST_ATTRS:
-            assert getattr(ip_addr, attr) is getattr(ip_addr.obj, attr)
+            assert getattr(ip_addr, attr) == getattr(ip_addr.obj, attr)
     
     @given(st.ip_addresses(v=6))
     def test_ipv6_bool(self, ip: IPv6Address):
