@@ -41,6 +41,7 @@ nav:
     - create_img: src/create_img.md
     - create_disk: src/create_disk.md
     - debug: src/debug.md
+    - ip_interface: src/ip_interface.md
     - utils: src/utils.md
   - Reference:
     # - FAQ: faq.md
