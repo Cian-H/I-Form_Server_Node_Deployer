@@ -22,7 +22,6 @@ fsspec = "^2023.10.0"
 mkdocs-git-revision-date-localized-plugin = "^1.2.1"
 mkdocs-material = {extras = ["all"], version = "^9.4.8"}
 
-
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.1"
 black = "^23.10.1"

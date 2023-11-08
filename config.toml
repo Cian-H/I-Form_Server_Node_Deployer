@@ -31,6 +31,9 @@ CLEANUP_IMAGES = false
 TESTING = true
 CLEANUP_IMAGES = false
 
+[default.typer]
+no_args_is_help = true
+
 [default.snoop.install]
 snoop = "ss"
 out = "snoop.log"
