@@ -1,10 +1,10 @@
 import atexit
 import filecmp
+from ipaddress import IPv4Address, IPv6Address
 import os
 from pathlib import Path
 import pickle
 import shutil
-from ipaddress import IPv4Address, IPv6Address
 
 from hypothesis import given
 from hypothesis import strategies as st
@@ -36,7 +36,7 @@ def cleanup():
 
 atexit.register(cleanup)
 
-from node_deployer import ip_interface, autoignition, create_disk, create_img  # noqa: E402
+from node_deployer import autoignition, create_disk, create_img, ip_interface  # noqa: E402
 
 
 with open(config.PROJECT_ROOT / "tests/data/node_deployer/test_args.toml", "rb") as f:
@@ -61,36 +61,36 @@ class TestIPInterface:
         "reverse_pointer",
         "version",
     )
-    
+
     @given(st.ip_addresses(v=4))
     def test_ipv4_parsing(self, ip: IPv4Address):
         ip_str = str(ip)
         test_result = ip_interface.IPAddress(ip_str)
         assert test_result.obj == ip
-    
+
     @given(st.ip_addresses(v=4))
     def test_ipv4_attr_passthrough(self, ip: IPv4Address):
         ip_addr = ip_interface.IPAddress(str(ip))
         for attr in self.TEST_ATTRS:
             assert getattr(ip_addr, attr) == getattr(ip_addr.obj, attr)
-    
+
     @given(st.ip_addresses(v=4))
     def test_ipv4_bool(self, ip: IPv4Address):
         ip_addr = ip_interface.IPAddress(str(ip))
         assert bool(ip_addr) != ip.is_unspecified
-    
+
     @given(st.ip_addresses(v=6))
     def test_ipv6_parsing(self, ip: IPv6Address):
         ip_str = str(ip)
         test_result = ip_interface.IPAddress(ip_str)
         assert test_result.obj == ip
-    
+
     @given(st.ip_addresses(v=6))
     def test_ipv6_attr_passthrough(self, ip: IPv6Address):
         ip_addr = ip_interface.IPAddress(str(ip))
         for attr in self.TEST_ATTRS:
             assert getattr(ip_addr, attr) == getattr(ip_addr.obj, attr)
-    
+
     @given(st.ip_addresses(v=6))
     def test_ipv6_bool(self, ip: IPv6Address):
         ip_addr = ip_interface.IPAddress(str(ip))
