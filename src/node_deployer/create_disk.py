@@ -87,7 +87,7 @@ def write_disk(disk: str) -> None:
         mounts=[config.CWD_MOUNT, Mount("/ignition_disk", disk, type="bind")],
         privileged=True,
         command=f"dd if={config.CWD_MOUNTDIR}/build/ignition.img of=/ignition_disk",
-        remove=config.CLEANUP_CONTAINERS,
+        remove=config.CLEANUP_IMAGES,
     )
 
 
