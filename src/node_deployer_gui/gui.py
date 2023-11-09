@@ -1,5 +1,6 @@
+from collections import defaultdict
 from functools import wraps
-from typing import Callable, Optional, Tuple
+from typing import Callable, DefaultDict, Optional, Tuple
 
 import flet as ft
 from node_deployer.create_disk import create_ignition_disk
@@ -13,10 +14,10 @@ def main(page: ft.Page) -> None:
     page.title = "I-Form Server Node Deployer"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
-    # TODO: Add hotkeys
     # TODO: Add a logo
     # TODO: Add a progress bar
     # TODO: Finalise arrangement of fields
+    # TODO: Add save/load functionality?
 
     # These fields are used to get the parameters for the disk creation
     disk, dd_element = disk_dropdown(tooltip="Select the disk to write to", label="Disk")
@@ -221,5 +222,30 @@ def main(page: ft.Page) -> None:
         alignment=ft.MainAxisAlignment.CENTER,
     )
 
-    # Finally, we add the rows to the page
+    # Finally, we finish constructing the UI by adding the rows to the page
     page.add(stacked_rows)
+
+    # As a final task, we define the hotkey events
+    # We do this using a dict to avoid a big, slow if-elif-else chain
+    def no_hotkey() -> Callable[[ft.KeyboardEvent], None]:
+        def dummy_func(e: ft.KeyboardEvent) -> None:
+            pass
+        return dummy_func
+
+    def quit_app(e: ft.KeyboardEvent) -> None:
+        if e.ctrl:
+            page.window_close()
+    
+    hotkey_map: DefaultDict[str, Callable[[ft.KeyboardEvent], None]] = defaultdict(
+        no_hotkey,
+        Enter=confirm_disk_creation,
+        Q=quit_app,
+    )
+    
+    def on_key_press(e: ft.KeyboardEvent) -> None:
+        print(e.key)
+        hotkey_map[e.key](e)
+    
+    page.on_keyboard_event = on_key_press
+    
+    page.update()  # This shouldn't be necessary, but ensures the UI is rendered correctly
