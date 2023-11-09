@@ -1,5 +1,6 @@
 from collections import defaultdict
 from functools import wraps
+from pathlib import Path
 from typing import Callable, DefaultDict, Optional, Tuple
 
 import flet as ft
@@ -10,25 +11,62 @@ from .disk_dropdown import disk_dropdown
 from .types import CreateDiskArgs
 
 
+# Hotkeys will be mapped using using a dict to avoid a big, slow if-elif-else chain
+def _no_hotkey() -> Callable[[ft.KeyboardEvent], None]:
+    def dummy_func(e: ft.KeyboardEvent) -> None:
+        pass
+
+    return dummy_func
+
+
+HOTKEY_MAP: DefaultDict[str, Callable[[ft.KeyboardEvent], None]] = defaultdict(_no_hotkey)
+
+
 def main(page: ft.Page) -> None:
     page.title = "I-Form Server Node Deployer"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
-    # TODO: Add a logo
     # TODO: Add a progress bar
-    # TODO: Finalise arrangement of fields
     # TODO: Add save/load functionality?
+
+    # Lets start with the easiest part: a logo in the top left
+    if page.platform_brightness == ft.ThemeMode.DARK:
+        logo = ft.Image(str(Path(__file__).parent / "assets/logo_dark.png"), width=210)
+    else:
+        logo = ft.Image(str(Path(__file__).parent / "assets/logo_light.png"), width=210)
+
+    logo_container = ft.Container(
+        content=logo,
+        padding=10,
+        alignment=ft.alignment.top_left,
+    )
+    page.add(logo_container)
 
     # These fields are used to get the parameters for the disk creation
     disk, dd_element = disk_dropdown(tooltip="Select the disk to write to", label="Disk")
-    hostname = ft.TextField(value="host", label="Hostname", text_align=ft.TextAlign.LEFT)
-    password = ft.TextField(
-        label="Password", password=True, can_reveal_password=True, text_align=ft.TextAlign.LEFT
+    hostname = ft.TextField(
+        value="host", label="Hostname", text_align=ft.TextAlign.LEFT, width=page.window_width // 3
     )
-    switch_ip = ft.TextField(label="Switch IP", text_align=ft.TextAlign.LEFT)
-    switch_port = ft.TextField(label="Switch Port", value="4789", text_align=ft.TextAlign.LEFT)
-    swarm_token = ft.TextField(label="Swarm Token", text_align=ft.TextAlign.LEFT)
-    
+    password = ft.TextField(
+        label="Password",
+        password=True,
+        can_reveal_password=True,
+        text_align=ft.TextAlign.LEFT,
+        width=page.window_width // 3,
+    )
+    switch_ip = ft.TextField(
+        label="Switch IP", text_align=ft.TextAlign.LEFT, width=page.window_width // 3
+    )
+    switch_port = ft.TextField(
+        label="Switch Port",
+        value="4789",
+        text_align=ft.TextAlign.LEFT,
+        width=page.window_width // 3,
+    )
+    swarm_token = ft.TextField(
+        label="Swarm Token", text_align=ft.TextAlign.LEFT, width=int((2 * page.window_width) // 3)
+    )
+
     # Add varnames, as they will be useful for unpacking later
     disk.__varname__ = "disk"
     hostname.__varname__ = "hostname"
@@ -38,7 +76,11 @@ def main(page: ft.Page) -> None:
     swarm_token.__varname__ = "swarm_token"
 
     # This wrapper validates the value of the field before passing it to the function
-    def validate_value[F](func: Callable[[], F]) -> Callable[[], Optional[F]]:  # mypy PEP 695 support can't come quickly enough # noqa
+    def validate_value[
+        F
+    ](func: Callable[[], F]) -> Callable[
+        [], Optional[F]
+    ]:  # mypy PEP 695 support can't come quickly enough # noqa
         #! It is important that bool(F) evaluates to False if the value is invalid
         @wraps(func)
         def wrapped() -> Optional[F]:
@@ -125,8 +167,8 @@ def main(page: ft.Page) -> None:
                 field.border_color = None
                 field.update()
                 typed_val = target_type(value)
-                vals[varname] = typed_val # type: ignore #! This is a false positive, an invalid literal would have been caught by the if statement above
-        
+                vals[varname] = typed_val  # type: ignore #! This is a false positive, an invalid literal would have been caught by the if statement above
+
         if invalid_values:
             return
 
@@ -143,6 +185,11 @@ def main(page: ft.Page) -> None:
         # side-effects here though...
         def close_dlg(*_) -> None:
             dlg.open = False
+            if "Y" in HOTKEY_MAP.keys():
+                del HOTKEY_MAP["Y"]
+            if "N" in HOTKEY_MAP.keys():
+                del HOTKEY_MAP["N"]
+            HOTKEY_MAP["Enter"] = confirm_disk_creation
             page.update()
 
         # This closure is called when the confirm disk creation button is pressed
@@ -182,14 +229,20 @@ def main(page: ft.Page) -> None:
             actions_alignment=ft.MainAxisAlignment.END,
         )
 
-        # Finally, we open the dialog popup
+        # Finally, we open the dialog popup and switch the hotkeys over
         page.dialog = dlg
         dlg.open = True
+        if "Enter" in HOTKEY_MAP.keys():
+            del HOTKEY_MAP["Enter"]
+        HOTKEY_MAP["Y"] = trigger_disk_creation
+        HOTKEY_MAP["N"] = close_dlg
         page.update()
+
 
     disk_creation_dialog = ft.FilledButton(
         text="Create Ignition Disk",
         on_click=confirm_disk_creation,
+        width=page.window_width // 3,
     )
 
     # Then, we arrange the fields into rows and columns
@@ -217,35 +270,33 @@ def main(page: ft.Page) -> None:
         alignment=ft.MainAxisAlignment.CENTER,
     )
 
+    swarm_token_row = ft.Row(
+        controls=[
+            swarm_token,
+        ],
+        alignment=ft.MainAxisAlignment.CENTER,
+    )
+
     stacked_rows = ft.Column(
-        [disk_row, node_row, switch_row, swarm_token],
+        [disk_row, node_row, switch_row, swarm_token_row],
         alignment=ft.MainAxisAlignment.CENTER,
     )
 
     # Finally, we finish constructing the UI by adding the rows to the page
     page.add(stacked_rows)
 
-    # As a final task, we define the hotkey events
-    # We do this using a dict to avoid a big, slow if-elif-else chain
-    def no_hotkey() -> Callable[[ft.KeyboardEvent], None]:
-        def dummy_func(e: ft.KeyboardEvent) -> None:
-            pass
-        return dummy_func
+    # As a final task, we define the opening screen hotkey events
+    HOTKEY_MAP["Enter"] = confirm_disk_creation
 
     def quit_app(e: ft.KeyboardEvent) -> None:
         if e.ctrl:
             page.window_close()
-    
-    hotkey_map: DefaultDict[str, Callable[[ft.KeyboardEvent], None]] = defaultdict(
-        no_hotkey,
-        Enter=confirm_disk_creation,
-        Q=quit_app,
-    )
-    
+
+    HOTKEY_MAP["Q"] = quit_app
+
     def on_key_press(e: ft.KeyboardEvent) -> None:
-        print(e.key)
-        hotkey_map[e.key](e)
-    
+        HOTKEY_MAP[e.key](e)
+
     page.on_keyboard_event = on_key_press
-    
+
     page.update()  # This shouldn't be necessary, but ensures the UI is rendered correctly
