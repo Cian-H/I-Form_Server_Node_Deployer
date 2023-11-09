@@ -1,19 +1,20 @@
 from functools import wraps
-from typing import Callable, Mapping
+from typing import Callable, Optional, Tuple
 
-from bidict import frozenbidict
 import flet as ft
-from flet_core.form_field_control import FormFieldControl
 from node_deployer.create_disk import create_ignition_disk
 from node_deployer.ip_interface import IPAddress
 
 from .disk_dropdown import disk_dropdown
+from .types import CreateDiskArgs
 
 
 def main(page: ft.Page) -> None:
     page.title = "I-Form Server Node Deployer"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
+    # TODO: Add hotkeys
+    # TODO: Add a logo
     # TODO: Add a progress bar
     # TODO: Finalise arrangement of fields
 
@@ -26,17 +27,25 @@ def main(page: ft.Page) -> None:
     switch_ip = ft.TextField(label="Switch IP", text_align=ft.TextAlign.LEFT)
     switch_port = ft.TextField(label="Switch Port", value="4789", text_align=ft.TextAlign.LEFT)
     swarm_token = ft.TextField(label="Swarm Token", text_align=ft.TextAlign.LEFT)
+    
+    # Add varnames, as they will be useful for unpacking later
+    disk.__varname__ = "disk"
+    hostname.__varname__ = "hostname"
+    password.__varname__ = "password"
+    switch_ip.__varname__ = "switch_ip"
+    switch_port.__varname__ = "switch_port"
+    swarm_token.__varname__ = "swarm_token"
 
     # This wrapper validates the value of the field before passing it to the function
-    def validate_value(func: Callable) -> Callable:
+    def validate_value[F](func: Callable[[], F]) -> Callable[[], Optional[F]]:  # mypy PEP 695 support can't come quickly enough # noqa
+        #! It is important that bool(F) evaluates to False if the value is invalid
         @wraps(func)
-        def wrapped():
-            out = func()
+        def wrapped() -> Optional[F]:
+            out: F = func()
             if out:
                 return out
             else:
-                # TODO: Highlight the invalid field
-                raise NotImplementedError("Invalid field value path not implemented")
+                return None
 
         return wrapped
 
@@ -55,7 +64,12 @@ def main(page: ft.Page) -> None:
 
     @validate_value
     def get_switch_ip() -> IPAddress:
-        return IPAddress(switch_ip.value if switch_ip.value is not None else "0.0.0.0")
+        ip = IPAddress("0.0.0.0")
+        try:
+            ip = IPAddress(switch_ip.value)
+        except ValueError:
+            pass
+        return ip
 
     @validate_value
     def get_switch_port() -> int:
@@ -67,26 +81,60 @@ def main(page: ft.Page) -> None:
 
     # A bidirectional dictionary gives us a stateless bidirectional map between
     # fields and their fetch functions
-    field_fetch_map: Mapping[FormFieldControl, Callable] = frozenbidict(
-        {
-            disk: get_disk,
-            hostname: get_hostname,
-            password: get_password,
-            switch_ip: get_switch_ip,
-            switch_port: get_switch_port,
-            swarm_token: get_swarm_token,
-        }
+    type FieldFetch = Tuple[ft.TextField | ft.Dropdown, Callable]
+    field_fetch_map: Tuple[
+        FieldFetch, FieldFetch, FieldFetch, FieldFetch, FieldFetch, FieldFetch
+    ] = (
+        (disk, get_disk),
+        (hostname, get_hostname),
+        (password, get_password),
+        (switch_ip, get_switch_ip),
+        (switch_port, get_switch_port),
+        (swarm_token, get_swarm_token),
     )
 
     # This button triggers the confirmation popup before calling the disk creation function
-    def confirm_disk_creation(*_):
+    def confirm_disk_creation(*_) -> None:
         # Fetch the values of the fields
-        disk_val: str = field_fetch_map[disk]()
-        hostname_val: str = field_fetch_map[hostname]()
-        password_val: str = field_fetch_map[password]()
-        switch_ip_val: IPAddress = field_fetch_map[switch_ip]()
-        switch_port_val: int = field_fetch_map[switch_port]()
-        swarm_token_val: str = field_fetch_map[swarm_token]()
+        vals: CreateDiskArgs = {
+            "disk": "",
+            "hostname": "",
+            "password": "",
+            "switch_ip": IPAddress("0.0.0.0"),
+            "switch_port": 0,
+            "swarm_token": "",
+        }
+        invalid_values = False
+        for field, fetch_func in field_fetch_map:
+            value = fetch_func()
+            varname: str = str(field.__varname__)
+            if varname in CreateDiskArgs.__annotations__.keys():
+                target_type = CreateDiskArgs.__annotations__[varname]
+            else:
+                raise KeyError(f"Field {varname} is not in CreateDiskArgs")
+            if value is None:
+                # If invalid values, highlight the field and set the error text
+                field.error_text = "This field is required"
+                field.border_color = "RED"
+                field.update()
+                invalid_values = True
+            else:
+                # If valid values, ensure the field is not highlighted and clear the error text
+                field.error_text = None
+                field.border_color = None
+                field.update()
+                typed_val = target_type(value)
+                vals[varname] = typed_val # type: ignore #! This is a false positive, an invalid literal would have been caught by the if statement above
+        
+        if invalid_values:
+            return
+
+        disk_val: str = vals["disk"]
+        hostname_val: str = vals["hostname"]
+        password_val: str = vals["password"]
+        switch_ip_val: IPAddress = vals["switch_ip"]
+        switch_port_val: int = vals["switch_port"]
+        swarm_token_val: str = vals["swarm_token"]
 
         # The following closures build the confirmation popup
         # Also: nested closures, eww. It feels dirty, but maintains the functional style
@@ -116,7 +164,11 @@ def main(page: ft.Page) -> None:
                 switch_port=switch_port_val,
                 swarm_token=swarm_token_val,
             )
-            close_dlg(None)
+            dlg.content = ft.Text("Ignition disk created!")
+            dlg.actions = [
+                ft.TextButton("OK", on_click=close_dlg),
+            ]
+            page.update()
 
         dlg = ft.AlertDialog(
             modal=True,

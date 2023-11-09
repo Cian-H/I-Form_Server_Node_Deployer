@@ -41,7 +41,6 @@ mkdocs-material = "^9.4.8"
 flet = "^0.11.0"
 psutil = "^5.9.6"
 types-psutil = "^5.9.5.17"
-bidict = "^0.22.1"
 
 [tool.poetry.scripts]
 node_deployer = "node_deployer.__main__:main"
