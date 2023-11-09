@@ -20,11 +20,11 @@ def disk_dropdown(**kwargs) -> Tuple[ft.Dropdown, ft.Row]:
         options=get_disk_options(),
         **kwargs,
     )
-    
-    def refresh_dropdown(_):
+
+    def refresh_dropdown(*_) -> None:
         dropdown.options = get_disk_options()
         dropdown.update()
-    
+
     refresh_button = ft.IconButton(
         icon="refresh",
         tooltip="Refresh disk list",

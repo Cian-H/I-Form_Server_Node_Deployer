@@ -28,7 +28,7 @@ def main(page: ft.Page) -> None:
     swarm_token = ft.TextField(label="Swarm Token", text_align=ft.TextAlign.LEFT)
 
     # This wrapper validates the value of the field before passing it to the function
-    def validate_value(func):
+    def validate_value(func: Callable) -> Callable:
         @wraps(func)
         def wrapped():
             out = func()
@@ -79,7 +79,7 @@ def main(page: ft.Page) -> None:
     )
 
     # This button triggers the confirmation popup before calling the disk creation function
-    def confirm_disk_creation(_):
+    def confirm_disk_creation(*_):
         # Fetch the values of the fields
         disk_val: str = field_fetch_map[disk]()
         hostname_val: str = field_fetch_map[hostname]()
@@ -92,12 +92,12 @@ def main(page: ft.Page) -> None:
         # Also: nested closures, eww. It feels dirty, but maintains the functional style
         # and most of its benefits. I'm tempting the functional gods to punish me with
         # side-effects here though...
-        def close_dlg(_):
+        def close_dlg(*_) -> None:
             dlg.open = False
             page.update()
 
         # This closure is called when the confirm disk creation button is pressed
-        def trigger_disk_creation(_):
+        def trigger_disk_creation(*_) -> None:
             dlg.title = None
             dlg.content = ft.Row(
                 controls=[
