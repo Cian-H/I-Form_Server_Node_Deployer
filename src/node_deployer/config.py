@@ -1,6 +1,5 @@
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Union
 
 import docker
 import tomllib
@@ -19,7 +18,7 @@ def __get_project_root():
 
 PROJECT_ROOT: Path = __get_project_root()
 
-ConfigLabel = Union[str, list[str]]  # After PEP695 support: type ConfigLabel = str | list[str]
+type ConfigLabel = str | list[str]
 
 
 class Config(SimpleNamespace):
