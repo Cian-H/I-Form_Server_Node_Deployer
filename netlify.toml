@@ -1,10 +1,12 @@
 [build]
 publish = "site"
 command = """
-restore_home_cache ".cache" "pip cache" &&
-restore_cwd_cache '.venv' 'python virtualenv' &&
+add-apt-repository ppa:deadsnakes/ppa &&
+apt update &&
+apt install python3.12 -y &&
 pip3 install -q poetry &&
 poetry config virtualenvs.in-project true &&
+poetry env use python3.12 &&
 poetry install -v &&
 poetry run build
 """
