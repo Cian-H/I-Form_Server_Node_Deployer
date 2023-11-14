@@ -26,7 +26,7 @@ def cli_spinner(*spinner_args, **spinner_kwargs) -> Callable:
     def decorator(f: Callable) -> Callable:
         # Indent the spinner to match its nesting level
         indent = len(inspect.stack()) - 1
-        spinner_kwargs["indent"] = f"├{"─"*indent}► "
+        spinner_kwargs["indent"] = f"├{'─'*indent}► " if indent else "├► "
         
         @wraps(f)
         def wrapped(*func_args, **func_kwargs):

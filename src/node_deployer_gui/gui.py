@@ -19,6 +19,15 @@ def _no_hotkey() -> Callable[[ft.KeyboardEvent], None]:
     return dummy_func
 
 
+def optional_num_floordiv(num: ft.OptionalNumber, denom: int) -> Optional[int]:
+    if num is None:
+        return None
+    elif isinstance(num, int):
+        return num // denom
+    else:
+        return int(num / denom)
+
+
 HOTKEY_MAP: DefaultDict[str, Callable[[ft.KeyboardEvent], None]] = defaultdict(_no_hotkey)
 
 
@@ -45,40 +54,45 @@ def main(page: ft.Page) -> None:
     # These fields are used to get the parameters for the disk creation
     disk, dd_element = disk_dropdown(tooltip="Select the disk to write to", label="Disk")
     hostname = ft.TextField(
-        value="host", label="Hostname", text_align=ft.TextAlign.LEFT, width=page.window_width // 3
+        value="host",
+        label="Hostname",
+        text_align=ft.TextAlign.LEFT,
+        width=optional_num_floordiv(page.window_width, 3)
     )
     password = ft.TextField(
         label="Password",
         password=True,
         can_reveal_password=True,
         text_align=ft.TextAlign.LEFT,
-        width=page.window_width // 3,
+        width=hostname.width,
     )
     switch_ip = ft.TextField(
-        label="Switch IP", text_align=ft.TextAlign.LEFT, width=page.window_width // 3
+        label="Switch IP", text_align=ft.TextAlign.LEFT, width=hostname.width
     )
     switch_port = ft.TextField(
         label="Switch Port",
         value="4789",
         text_align=ft.TextAlign.LEFT,
-        width=page.window_width // 3,
+        width=hostname.width,
     )
     swarm_token = ft.TextField(
-        label="Swarm Token", text_align=ft.TextAlign.LEFT, width=int((2 * page.window_width) // 3)
+        label="Swarm Token",
+        text_align=ft.TextAlign.LEFT,
+        width=(2*hostname.width) if hostname.width else None,
     )
 
-    # Add varnames, as they will be useful for unpacking later
-    disk.__varname__ = "disk"
-    hostname.__varname__ = "hostname"
-    password.__varname__ = "password"
-    switch_ip.__varname__ = "switch_ip"
-    switch_port.__varname__ = "switch_port"
-    swarm_token.__varname__ = "swarm_token"
+    # Map varnames, as they will be useful for unpacking later
+    varnames = {
+        disk: "disk",
+        hostname: "hostname",
+        password: "password",
+        switch_ip: "switch_ip",
+        switch_port: "switch_port",
+        swarm_token: "swarm_token",
+    }
 
     # This wrapper validates the value of the field before passing it to the function
-    def validate_value[
-        F
-    ](func: Callable[[], F]) -> Callable[
+    def validate_value[F](func: Callable[[], F]) -> Callable[
         [], Optional[F]
     ]:  # mypy PEP 695 support can't come quickly enough # noqa
         #! It is important that bool(F) evaluates to False if the value is invalid
@@ -150,7 +164,7 @@ def main(page: ft.Page) -> None:
         invalid_values = False
         for field, fetch_func in field_fetch_map:
             value = fetch_func()
-            varname: str = str(field.__varname__)
+            varname: str = varnames[field]
             if varname in CreateDiskArgs.__annotations__.keys():
                 target_type = CreateDiskArgs.__annotations__[varname]
             else:
@@ -242,7 +256,7 @@ def main(page: ft.Page) -> None:
     disk_creation_dialog = ft.FilledButton(
         text="Create Ignition Disk",
         on_click=confirm_disk_creation,
-        width=page.window_width // 3,
+        width=hostname.width,
     )
 
     # Then, we arrange the fields into rows and columns
