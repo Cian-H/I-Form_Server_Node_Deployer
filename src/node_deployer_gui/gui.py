@@ -1,6 +1,5 @@
 from collections import defaultdict
 from functools import wraps
-from pathlib import Path
 from typing import Callable, DefaultDict, Optional, Tuple
 
 import flet as ft
@@ -40,9 +39,9 @@ def main(page: ft.Page) -> None:
 
     # Lets start with the easiest part: a logo in the top left
     if page.platform_brightness == ft.ThemeMode.DARK:
-        logo = ft.Image(str(Path(__file__).parent / "assets/logo_dark.png"), width=210)
+        logo = ft.Image(src="logo_dark.png", width=210)
     else:
-        logo = ft.Image(str(Path(__file__).parent / "assets/logo_light.png"), width=210)
+        logo = ft.Image(src="logo_light.png", width=210)
 
     logo_container = ft.Container(
         content=logo,

@@ -2,7 +2,8 @@
 name = "i-form-server-node-deployer"
 version = "0.1.0"
 description = "A tool for automatically deploying nodes in a cluster server for research environments."
-urls={github = "https://github.com/Cian-H/I-Form_Server_Node_Deployer"}
+repository = "https://github.com/Cian-H/I-Form_Server_Node_Deployer"
+documentation = "https://i-form-node-deployer.netlify.app"
 authors = ["Cian Hughes <cian.hughes@dcu.ie>"]
 readme = "README.md"
 license = "MIT"
@@ -12,7 +13,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.12,<3.13"
 typer = {extras = ["all"], version = "^0.9.0"}
 selenium = "^4.14.0"
 mechanicalsoup = "^1.3.0"
@@ -42,10 +43,15 @@ flet = "^0.11.0"
 psutil = "^5.9.6"
 types-psutil = "^5.9.5.17"
 
+
+[tool.poetry.group.build.dependencies]
+pyinstaller = "^6.2.0"
+
 [tool.poetry.scripts]
 node_deployer = "node_deployer.__main__:main"
 debug_node_deployer = "node_deployer.__main__:debug"
 build_docs = "scripts.docs:main"
+build = "scripts.build:main"
 
 [build-system]
 requires = ["poetry-core"]
