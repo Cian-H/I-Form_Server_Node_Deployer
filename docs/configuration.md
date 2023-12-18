@@ -27,7 +27,7 @@ This configuration keeps all computations local to the machine on which the tool
 | FUELIGNITION_URL | "http://localhost:3000/fuel-ignition/edit" | str |
 
 ## remote
-<p>This configuration allows the use of hosted websites for hte fuel-ignition configurator.</p>
+<p>This configuration allows the use of hosted websites for the fuel-ignition configurator.</p>
 <p>Currently, this configuration is broken/deprecated. It is being kept as it may be be reimplemented in the future as part of a dockerless configuration.</p>
 
 | Variable | Value | Type |

@@ -33,7 +33,9 @@ docker-stubs = {git = "https://github.com/rdozier-work/docker-stubs"}
 [tool.poetry.group.docs.dependencies]
 mkdocs = "^1.5.3"
 mkdocstrings = {extras = ["python"], version = "^0.23.0"}
+mkdocs-include-markdown-plugin = "^6.0.4"
 mkdocs-material = "^9.4.8"
+pylint = "^3.0.3"
 
 [tool.poetry.scripts]
 node_deployer = "node_deployer.__main__:main"

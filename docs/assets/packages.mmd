@@ -1,0 +1,49 @@
+classDiagram
+  class node_deployer {
+  }
+  class __main__ {
+  }
+  class autoignition {
+  }
+  class cli {
+  }
+  class config {
+  }
+  class create_disk {
+  }
+  class create_img {
+  }
+  class debug {
+  }
+  class ip_interface {
+  }
+  class node_deployer {
+  }
+  class utils {
+  }
+  __main__ --> config
+  __main__ --> node_deployer
+  autoignition --> cli
+  autoignition --> config
+  autoignition --> debug
+  autoignition --> utils
+  cli --> config
+  cli --> utils
+  create_disk --> cli
+  create_disk --> config
+  create_disk --> create_img
+  create_disk --> debug
+  create_disk --> ip_interface
+  create_disk --> utils
+  create_img --> autoignition
+  create_img --> cli
+  create_img --> config
+  create_img --> debug
+  create_img --> ip_interface
+  create_img --> utils
+  debug --> config
+  node_deployer --> autoignition
+  node_deployer --> config
+  node_deployer --> create_disk
+  node_deployer --> create_img
+  utils --> config

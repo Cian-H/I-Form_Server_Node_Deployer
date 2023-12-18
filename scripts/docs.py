@@ -1,4 +1,5 @@
-import subprocess
+from mkdocs.__main__ import build_command as mkdocs_build
+from pylint.pyreverse.main import Run as pyreverse
 
 
 README_FILES = (
@@ -22,11 +23,12 @@ def update_license():
         target.write(source.read())
 
 
-def create_docs():
-    subprocess.run("mkdocs build", shell=True, check=True)
+def generate_uml():
+    pyreverse(["-o", "mmd", "-d", "docs/assets", "node_deployer"])
 
 
 def main():
     create_readme()
     update_license()
-    create_docs()
+    generate_uml()
+    mkdocs_build()

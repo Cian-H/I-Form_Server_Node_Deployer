@@ -43,6 +43,7 @@ nav:
     - debug: src/debug.md
     - ip_interface: src/ip_interface.md
     - utils: src/utils.md
+  - UML: uml.md
   - Reference:
     # - FAQ: faq.md
     # - Troubleshooting: troubleshooting.md
@@ -53,7 +54,12 @@ extra:
   version:
     provider: mike
 
-# markdown_extensions: 
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
 #   - mkdocs-typer
 
 plugins:
@@ -64,5 +70,6 @@ plugins:
   # - material/typeset
   - search
   - mkdocstrings
+  - include-markdown
   - git-revision-date-localized:
       enable_creation_date: true

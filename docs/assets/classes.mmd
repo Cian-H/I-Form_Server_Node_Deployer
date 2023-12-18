@@ -1,0 +1,14 @@
+classDiagram
+  class Config {
+    apply_config(config: dict) None
+    finalise_config(config: dict) None
+    get_config(config_label: ConfigLabel) dict
+    update_config(config_label: ConfigLabel) None
+  }
+  class IPAddress {
+    obj : IPv4Address | IPv6Address
+  }
+  class Singleton {
+  }
+  class SingletonProgress {
+  }
